@@ -6,7 +6,7 @@ CONFIGURATION_NAME = "microk8s"
 PRIMARY_NAMESPACE = "esl-games"
 USER = "admin"
 CLUSTER = "microk8s-cluster"
-MICROK8S_REGISTRY = "localhost:3200"
+MICROK8S_REGISTRY = "localhost:32000"
 USER = "admin"
 
 k8s_deploy(
@@ -26,4 +26,17 @@ k8s_deploy(
     manifests = ["manifests/postgres.yaml"],
     namespace = PRIMARY_NAMESPACE,
     user = USER
+)
+
+k8s_deploy(
+    name = "matcher." + CONFIGURATION_NAME,
+    objects = [":namespace." + CONFIGURATION_NAME],
+    cluster = CLUSTER,
+    image_registry = MICROK8S_REGISTRY,
+    manifests = ["manifests/matcher.yaml"],
+    namespace = PRIMARY_NAMESPACE,
+    user = USER,
+    images = {
+        "matcher-image": "@webapp//:webapp-image",
+    },
 )
