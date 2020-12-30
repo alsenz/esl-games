@@ -6,7 +6,7 @@ CONFIGURATION_NAME = "microk8s"
 PRIMARY_NAMESPACE = "esl-games"
 USER = "admin"
 CLUSTER = "microk8s-cluster"
-MICROK8S_REGISTRY = "localhost:32000"
+MICROK8S_REGISTRY = "localhost:32000"#32000"
 USER = "admin"
 
 k8s_deploy(
@@ -33,6 +33,8 @@ k8s_deploy(
     objects = [":namespace." + CONFIGURATION_NAME],
     cluster = CLUSTER,
     image_registry = MICROK8S_REGISTRY,
+    image_repository = "esl-games-matcher",
+    image_digest_tag = True,
     manifests = ["manifests/matcher.yaml"],
     namespace = PRIMARY_NAMESPACE,
     user = USER,
