@@ -33,4 +33,7 @@ if [ -z "$1" ]; then
   exit 1;
 fi
 
+WORKSPACE_ROOT=$(dirname $(readlink go.mod))
+cd $WORKSPACE_ROOT
 env GIT_TERMINAL_PROMPT=1 $gotool get -u $@
+bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=deps.bzl%go_dependencies
