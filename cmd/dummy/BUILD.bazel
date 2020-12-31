@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_binary(
+    name = "dummy",
+    embed = [":dummy_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "dummy_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/example/project/cmd/dummy",
+    visibility = ["//visibility:private"],
+)
