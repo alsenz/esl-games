@@ -9,5 +9,6 @@ go_binary(
 go_library(
     name = "dummy_lib",
     srcs = ["main.go"],
+    importpath = "github.com/alsenz/esl-games/cmd/dummy",
     visibility = ["//visibility:private"],
 )

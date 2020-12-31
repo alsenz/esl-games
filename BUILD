@@ -6,6 +6,13 @@ gazelle(name = "gazelle")
 sh_binary(
     name = "go-get",
     srcs = ["scripts/go-get.sh"],
-    data = ["//:gazelle-runner", "go.mod", "deps.bzl"],
-    tags = ["no-sandbox", "local"]
+    data = [
+        "deps.bzl",
+        "go.mod",
+        "//:gazelle-runner",
+    ],
+    tags = [
+        "local",
+        "no-sandbox",
+    ],
 )
