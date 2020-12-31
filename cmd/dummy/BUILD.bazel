@@ -9,6 +9,5 @@ go_binary(
 go_library(
     name = "dummy_lib",
     srcs = ["main.go"],
-    importpath = "github.com/example/project/cmd/dummy",
     visibility = ["//visibility:private"],
 )
