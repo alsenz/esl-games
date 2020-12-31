@@ -5,4 +5,8 @@ go_library(
     srcs = ["assetserver.go"],
     importpath = "github.com/alsenz/esl-games/pkg/assetserver",
     visibility = ["//visibility:public"],
+    deps = [
+        "@io_gorm_driver_postgres//:postgres",
+        "@io_gorm_gorm//:gorm",
+    ],
 )
