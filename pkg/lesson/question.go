@@ -14,7 +14,7 @@ import (
 //TODO questions have
 
 //TODO
-//TODO 1) gorm question
+//TODO 1) gorm question - doesn't work :(
 //TODO 2) go variants
 //TODO 3) go interfaces - mocking out response...
 
@@ -27,7 +27,8 @@ type Question struct {
 	account.UserObject
 	Content string //TODO this may involve images of course... I think we're gonna allow this via markdown...
 	Header  string
-	Tags    []string //TODO gorm question - how to embed this
+	//TODO will have to split this manually
+	Tags    []string //TODO gorm question - how to embed this - ah well that's not happening apparently...
 	//TODO response type - probably here we just need the response type
 }
 
