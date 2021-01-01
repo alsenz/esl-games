@@ -1,19 +1,4 @@
 ---
-# Source: postgresql/templates/secrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: esl-games-postgresql
-  labels:
-    app.kubernetes.io/name: postgresql
-    helm.sh/chart: postgresql-10.2.0
-    app.kubernetes.io/instance: esl-games
-    app.kubernetes.io/managed-by: Helm
-type: Opaque
-data:
-  postgresql-postgres-password: "a25tazFkTWRCbQ=="
-  postgresql-password: "djdMdEx6WFJHMQ=="
----
 # Source: postgresql/templates/svc-headless.yaml
 apiVersion: v1
 kind: Service
@@ -139,6 +124,8 @@ spec:
               value: "/bitnami/postgresql/data"
             - name: POSTGRES_USER
               value: "postgres"
+            - name: POSTGRESQL_DATABASE
+              value: "esl_games"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:

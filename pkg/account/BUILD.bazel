@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "account",
+    srcs = [
+        "group.go",
+        "user.go",
+        "userobject.go",
+    ],
+    importpath = "github.com/alsenz/esl-games/pkg/account",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/model",
+        "@com_github_satori_go_uuid//:go_uuid",
+        "@io_gorm_gorm//:gorm",
+    ],
+)

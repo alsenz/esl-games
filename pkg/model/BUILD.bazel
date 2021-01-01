@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "model",
+    srcs = ["model.go"],
+    importpath = "github.com/alsenz/esl-games/pkg/model",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_satori_go_uuid//:go_uuid",
+        "@io_gorm_gorm//:gorm",
+    ],
+)

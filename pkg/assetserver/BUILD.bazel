@@ -6,6 +6,7 @@ go_library(
     importpath = "github.com/alsenz/esl-games/pkg/assetserver",
     visibility = ["//visibility:public"],
     deps = [
+        "//pkg/account",
         "@io_gorm_driver_postgres//:postgres",
         "@io_gorm_gorm//:gorm",
     ],

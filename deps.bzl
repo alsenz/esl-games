@@ -256,6 +256,13 @@ def go_dependencies():
         version = "v1.5.1",
     )
     go_repository(
+        name = "com_github_thanhpk_randstr",
+        importpath = "github.com/thanhpk/randstr",
+        sum = "h1:IN78qu/bR+My+gHCvMEXhR/i5oriVHcTB/BJJIRTsNo=",
+        version = "v1.0.4",
+    )
+
+    go_repository(
         name = "com_github_zenazn_goji",
         importpath = "github.com/zenazn/goji",
         sum = "h1:RSQQAbXGArQ0dIDEq+PI6WqN6if+5KHu6x2Cx/GXLTQ=",

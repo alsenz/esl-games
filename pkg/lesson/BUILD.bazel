@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "lesson",
+    srcs = [
+        "answers.go",
+        "lesson.go",
+        "plan.go",
+        "player.go",
+        "question.go",
+        "round.go",
+        "scores.go",
+    ],
+    importpath = "github.com/alsenz/esl-games/pkg/lesson",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/account",
+        "@com_github_satori_go_uuid//:go_uuid",
+        "@io_gorm_gorm//:gorm",
+    ],
+)
