@@ -34,6 +34,23 @@ genrule(
 
 [
     k8s_deploy(
+        name = "lesson-crd." + DEP_MODE + "." + CONFIGURATION_NAME,
+        cluster = CLUSTER,
+        gitops = False,
+        image_registry = REGISTRY,
+        manifests = [
+            "manifests/lesson-crd.yaml",
+        ],
+        namespace = PRIMARY_NAMESPACE,
+        objects = [":namespace.deps." + CONFIGURATION_NAME] if DEP_MODES[DEP_MODE] else [],
+        user = USER,
+    )
+    for DEP_MODE in DEP_MODES
+    for CONFIGURATION_NAME, (CLUSTER, PRIMARY_NAMESPACE, USER, REGISTRY) in CONFIGURATION_TABLE.items()
+]
+
+[
+    k8s_deploy(
         name = "postgres-secret." + DEP_MODE + "." + CONFIGURATION_NAME,
         cluster = CLUSTER,
         gitops = False,
