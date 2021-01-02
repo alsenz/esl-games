@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	eslgamesalsenzgithubcomv1alpha1 "github.com/alsenz/esl-games/api/v1alpha1"
-	"github.com/alsenz/esl-games/controllers"
+	"github.com/alsenz/esl-games/pkg/lessoncontroller"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -66,9 +66,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.LessonReconciler{
+	if err = (&lessoncontroller.LessonReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Lesson"),
+		Log:    ctrl.Log.WithName("lessoncontroller").WithName("Lesson"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Lesson")

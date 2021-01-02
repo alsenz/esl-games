@@ -1,9 +1,9 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "controllers",
+    name = "lessoncontroller",
     srcs = ["lesson_controller.go"],
-    importpath = "github.com/alsenz/esl-games/controllers",
+    importpath = "github.com/alsenz/esl-games/pkg/lessoncontroller",
     visibility = ["//visibility:public"],
     deps = [
         "//api/v1alpha1",
@@ -15,9 +15,9 @@ go_library(
 )
 
 go_test(
-    name = "controllers_test",
+    name = "lessoncontroller_test",
     srcs = ["suite_test.go"],
-    embed = [":controllers"],
+    embed = [":lessoncontroller"],
     deps = [
         "//api/v1alpha1",
         "@com_github_onsi_ginkgo//:ginkgo",

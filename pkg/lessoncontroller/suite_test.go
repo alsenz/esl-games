@@ -2,7 +2,7 @@
 Copyright 2021.
 */
 
-package controllers
+package lessoncontroller
 
 import (
 	"path/filepath"
