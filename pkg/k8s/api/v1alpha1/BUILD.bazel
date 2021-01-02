@@ -19,6 +19,7 @@ genrule(
     outs = ["zz_generated.deepcopy.go"],
     cmd = "GOCACHE=$$(realpath $(@D))/.gocache GOPATH=$$(realpath $(execpath :controller-gen-go-path)) $(execpath @io_k8s_sigs_controller_tools//cmd/controller-gen:controller-gen) object paths=$< output:dir=$(@D)",
     tags = [
+        "local",
         "no-sandbox",
     ],
     tools = [
