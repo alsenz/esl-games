@@ -22,9 +22,9 @@ type LessonReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=esl-games.alsenz.github.com.esl-games.alsenz.github.com,resources=lessons,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=esl-games.alsenz.github.com.esl-games.alsenz.github.com,resources=lessons/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=esl-games.alsenz.github.com.esl-games.alsenz.github.com,resources=lessons/finalizers,verbs=update
+// +kubebuilder:rbac:groups=esl-games.alsenz.github.com,resources=lessons,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=esl-games.alsenz.github.com,resources=lessons/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=esl-games.alsenz.github.com,resources=lessons/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

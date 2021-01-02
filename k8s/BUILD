@@ -33,7 +33,7 @@ genrule(
     srcs = [
         "//api/v1alpha1:v1apha1-srcs",
     ],
-    outs = ["manifests/esl-games.alsenz.github.com.esl-games.alsenz.github.com_lessons.yaml"],
+    outs = ["manifests/esl-games.alsenz.github.com_lessons.yaml"],
     cmd = "GOCACHE=$$(realpath $(@D))/.gocache;" +
           " GOPATH=$$(realpath $(execpath :controller-gen-go-path));" +
           " OUTDIR=$$(realpath $(@D));" +
@@ -56,7 +56,7 @@ genrule(
         cluster = CLUSTER,
         gitops = False,
         image_registry = REGISTRY,
-        manifests = ["manifests/esl-games.alsenz.github.com.esl-games.alsenz.github.com_lessons.yaml"],
+        manifests = ["manifests/esl-games.alsenz.github.com_lessons.yaml"],
         namespace = PRIMARY_NAMESPACE,
         user = USER,
     )
