@@ -64,6 +64,31 @@ genrule(
     for CONFIGURATION_NAME, (CLUSTER, PRIMARY_NAMESPACE, USER, REGISTRY) in CONFIGURATION_TABLE.items()
 ]
 
+#TODO give this a go see if it works
+[
+    k8s_deploy(
+        name = "lesson-controller." + DEP_MODE + "." + CONFIGURATION_NAME,
+        cluster = CLUSTER,
+        configurations = [
+            #TODO I have no idea if this is working, need to validate this!
+            "manifests/lesson-operator/kustomization.yaml",
+            "manifests/lesson-operator/lesson_controller_manager_config.yaml",
+        ],
+        gitops = False,
+        image_digest_tag = True,
+        image_registry = REGISTRY,
+        images = {
+            "lesson-controller": "//cmd/lesson-operator:lesson-operator-image",
+        },
+        manifests = ["manifests/lesson-operator/manager.yaml"],
+        namespace = PRIMARY_NAMESPACE,
+        objects = [":namespace.deps." + CONFIGURATION_NAME] if DEP_MODES[DEP_MODE] else [],
+        user = USER,
+    )
+    for DEP_MODE in DEP_MODES
+    for CONFIGURATION_NAME, (CLUSTER, PRIMARY_NAMESPACE, USER, REGISTRY) in CONFIGURATION_TABLE.items()
+]
+
 [
     k8s_deploy(
         name = "namespace." + DEP_MODE + "." + CONFIGURATION_NAME,
