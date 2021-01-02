@@ -6,7 +6,7 @@ go_library(
     importpath = "github.com/alsenz/esl-games/cmd/operator",
     visibility = ["//visibility:private"],
     deps = [
-        "//api/v1alpha1",
+        "//pkg/k8s/api/v1alpha1",
         "//pkg/lessoncontroller",
         "@io_k8s_apimachinery//pkg/runtime",
         "@io_k8s_apimachinery//pkg/util/runtime",

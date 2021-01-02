@@ -23,7 +23,7 @@ go_path(
     name = "controller-gen-go-path",
     visibility = ["//visibility:public"],
     deps = [
-        "//api/v1alpha1",
+        "//pkg/k8s/api/v1alpha1",
     ],
 )
 
@@ -31,7 +31,7 @@ go_path(
 genrule(
     name = "controller-gen-crd",
     srcs = [
-        "//api/v1alpha1:v1apha1-srcs",
+        "//pkg/k8s/api/v1alpha1:v1apha1-srcs",
     ],
     outs = ["manifests/esl-games.alsenz.github.com_lessons.yaml"],
     cmd = "GOCACHE=$$(realpath $(@D))/.gocache;" +
@@ -40,7 +40,7 @@ genrule(
           " CMDPATH=$$(realpath $(execpath @io_k8s_sigs_controller_tools//cmd/controller-gen:controller-gen));" +
           " cd $$GOPATH;" +
           " >&2 pwd;" +
-          " GOCACHE=$$GOCACHE GOPATH=$$GOPATH $$CMDPATH crd paths=./src/github.com/alsenz/esl-games/api/v1alpha1/ output:crd:dir=$$OUTDIR",
+          " GOCACHE=$$GOCACHE GOPATH=$$GOPATH $$CMDPATH crd paths=./src/github.com/alsenz/esl-games/pkg/k8s/api/v1alpha1/ output:crd:dir=$$OUTDIR",
     tags = [
         "no-sandbox",
     ],

@@ -6,7 +6,7 @@ go_library(
     importpath = "github.com/alsenz/esl-games/pkg/lessoncontroller",
     visibility = ["//visibility:public"],
     deps = [
-        "//api/v1alpha1",
+        "//pkg/k8s/api/v1alpha1",
         "@com_github_go_logr_logr//:logr",
         "@io_k8s_apimachinery//pkg/runtime",
         "@io_k8s_sigs_controller_runtime//:controller-runtime",
@@ -19,7 +19,7 @@ go_test(
     srcs = ["suite_test.go"],
     embed = [":lessoncontroller"],
     deps = [
-        "//api/v1alpha1",
+        "//pkg/k8s/api/v1alpha1",
         "@com_github_onsi_ginkgo//:ginkgo",
         "@com_github_onsi_gomega//:gomega",
         "@io_k8s_client_go//kubernetes/scheme",

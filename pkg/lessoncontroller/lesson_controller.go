@@ -12,7 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	eslgamesalsenzgithubcomv1alpha1 "github.com/alsenz/esl-games/api/v1alpha1"
+	eslgamesalsenzgithubcomv1alpha1 "github.com/alsenz/esl-games/pkg/k8s/api/v1alpha1"
 )
 
 // LessonReconciler reconciles a Lesson object

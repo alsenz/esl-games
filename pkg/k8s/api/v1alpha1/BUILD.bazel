@@ -40,7 +40,7 @@ go_library(
         "lesson_types.go",
         "zz_generated.deepcopy.go",
     ],
-    importpath = "github.com/alsenz/esl-games/api/v1alpha1",
+    importpath = "github.com/alsenz/esl-games/pkg/k8s/api/v1alpha1",
     visibility = ["//visibility:public"],
     deps = [
         "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",

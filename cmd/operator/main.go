@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	eslgamesalsenzgithubcomv1alpha1 "github.com/alsenz/esl-games/api/v1alpha1"
+	eslgamesalsenzgithubcomv1alpha1 "github.com/alsenz/esl-games/pkg/k8s/api/v1alpha1"
 	"github.com/alsenz/esl-games/pkg/lessoncontroller"
 	// +kubebuilder:scaffold:imports
 )
