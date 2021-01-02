@@ -1,4 +1,5 @@
 load("@com_adobe_rules_gitops//gitops:defs.bzl", "k8s_deploy")
+load("@io_bazel_rules_go//go:def.bzl", "go_path")
 
 CONFIGURATION_TABLE = {
     # Configuration Name: Cluster, Primary Namespace, User, Registry
@@ -18,14 +19,70 @@ genrule(
     tools = ["//k8s/scripts:generate-secrets"],
 )
 
+go_path(
+    name = "controller-gen-go-path",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/k8s/api/v1alpha1",
+    ],
+)
+
+# Note: this genrule could do with being parameterised on the import path - /esl-games/api/v1alpha1 feels a little hard coded to me.
+genrule(
+    name = "controller-gen-crd",
+    srcs = [
+        "//pkg/k8s/api/v1alpha1:v1apha1-srcs",
+    ],
+    outs = ["manifests/esl-games.alsenz.github.com_lessons.yaml"],
+    cmd = "GOCACHE=$$(realpath $(@D))/.gocache;" +
+          " GOPATH=$$(realpath $(execpath :controller-gen-go-path));" +
+          " OUTDIR=$$(realpath $(@D));" +
+          " CMDPATH=$$(realpath $(execpath @io_k8s_sigs_controller_tools//cmd/controller-gen:controller-gen));" +
+          " cd $$GOPATH;" +
+          " >&2 pwd;" +
+          " GOCACHE=$$GOCACHE GOPATH=$$GOPATH $$CMDPATH crd paths=./src/github.com/alsenz/esl-games/pkg/k8s/api/v1alpha1/ output:crd:dir=$$OUTDIR",
+    tags = [
+        "no-sandbox",
+    ],
+    tools = [
+        ":controller-gen-go-path",
+        "@io_k8s_sigs_controller_tools//cmd/controller-gen",
+    ],
+)
+
 [
     k8s_deploy(
-        name = "namespace." + DEP_MODE + "." + CONFIGURATION_NAME,
+        name = "lesson-crd." + DEP_MODE + "." + CONFIGURATION_NAME,
         cluster = CLUSTER,
         gitops = False,
         image_registry = REGISTRY,
-        manifests = ["manifests/namespace.yaml"],
+        manifests = ["manifests/esl-games.alsenz.github.com_lessons.yaml"],
         namespace = PRIMARY_NAMESPACE,
+        user = USER,
+    )
+    for DEP_MODE in DEP_MODES
+    for CONFIGURATION_NAME, (CLUSTER, PRIMARY_NAMESPACE, USER, REGISTRY) in CONFIGURATION_TABLE.items()
+]
+
+#TODO give this a go see if it works
+[
+    k8s_deploy(
+        name = "lesson-controller." + DEP_MODE + "." + CONFIGURATION_NAME,
+        cluster = CLUSTER,
+        configurations = [
+            #TODO I have no idea if this is working, need to validate this!
+            "manifests/lesson-operator/kustomization.yaml",
+            "manifests/lesson-operator/lesson_controller_manager_config.yaml",
+        ],
+        gitops = False,
+        image_digest_tag = True,
+        image_registry = REGISTRY,
+        images = {
+            "lesson-controller": "//cmd/lesson-operator:lesson-operator-image",
+        },
+        manifests = ["manifests/lesson-operator/manager.yaml"],
+        namespace = PRIMARY_NAMESPACE,
+        objects = [":namespace.deps." + CONFIGURATION_NAME] if DEP_MODES[DEP_MODE] else [],
         user = USER,
     )
     for DEP_MODE in DEP_MODES
@@ -34,15 +91,12 @@ genrule(
 
 [
     k8s_deploy(
-        name = "lesson-crd." + DEP_MODE + "." + CONFIGURATION_NAME,
+        name = "namespace." + DEP_MODE + "." + CONFIGURATION_NAME,
         cluster = CLUSTER,
         gitops = False,
         image_registry = REGISTRY,
-        manifests = [
-            "manifests/lesson-crd.yaml",
-        ],
+        manifests = ["manifests/namespace.yaml"],
         namespace = PRIMARY_NAMESPACE,
-        objects = [":namespace.deps." + CONFIGURATION_NAME] if DEP_MODES[DEP_MODE] else [],
         user = USER,
     )
     for DEP_MODE in DEP_MODES

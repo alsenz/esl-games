@@ -1,0 +1,52 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_path")
+
+go_path(
+    name = "controller-gen-go-path",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_apimachinery//pkg/runtime",
+        "@io_k8s_apimachinery//pkg/runtime/schema",
+        "@io_k8s_sigs_controller_runtime//pkg/scheme",
+    ],
+)
+
+genrule(
+    name = "controller-gen-object",
+    srcs = [
+        "lesson_types.go",
+    ],
+    outs = ["zz_generated.deepcopy.go"],
+    cmd = "GOCACHE=$$(realpath $(@D))/.gocache GOPATH=$$(realpath $(execpath :controller-gen-go-path)) $(execpath @io_k8s_sigs_controller_tools//cmd/controller-gen:controller-gen) object paths=$< output:dir=$(@D)",
+    tags = [
+        "local",
+        "no-sandbox",
+    ],
+    tools = [
+        ":controller-gen-go-path",
+        "@io_k8s_sigs_controller_tools//cmd/controller-gen",
+    ],
+)
+
+filegroup(
+    name = "v1apha1-srcs",
+    srcs = glob(["*.go"]) + ["zz_generated.deepcopy.go"],
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "v1alpha1",
+    srcs = [
+        "groupversion_info.go",
+        "lesson_types.go",
+        "zz_generated.deepcopy.go",
+    ],
+    importpath = "github.com/alsenz/esl-games/pkg/k8s/api/v1alpha1",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_apimachinery//pkg/runtime",  # keep
+        "@io_k8s_apimachinery//pkg/runtime/schema",
+        "@io_k8s_sigs_controller_runtime//pkg/scheme",
+    ],
+)

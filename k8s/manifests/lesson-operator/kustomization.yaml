@@ -1,0 +1,10 @@
+resources:
+- manager.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+- name: lesson-manager-config
+  files:
+  - lesson_controller_manager_config.yaml

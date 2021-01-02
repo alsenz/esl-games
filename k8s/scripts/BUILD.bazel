@@ -2,8 +2,15 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_binary(
     name = "generate-secrets",
-    srcs = ["generate-secrets.go"],
+    embed = [":scripts_lib"],
     importpath = "github.com/alsenz/esl-games/k8s/scripts",
     visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "scripts_lib",
+    srcs = ["generate-secrets.go"],
+    importpath = "github.com/alsenz/esl-games/k8s/scripts",
+    visibility = ["//visibility:private"],
     deps = ["@com_github_thanhpk_randstr//:randstr"],
 )
