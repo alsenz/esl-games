@@ -100,6 +100,9 @@ func (r *LessonReconciler) ensureLatestPod(instance *eslgamesalsenzgithubcomv1al
 	return nil
 }
 
+//TODO newServiceForPod is next step
+//TODO newIngressRule too
+
 // newPodForCR returns a deployment with a games-server for the lesson
 func newPodForCR(cr *eslgamesalsenzgithubcomv1alpha1.Lesson) *corev1.Pod {
 	labels := map[string]string{
@@ -115,7 +118,7 @@ func newPodForCR(cr *eslgamesalsenzgithubcomv1alpha1.Lesson) *corev1.Pod {
 			Containers: []corev1.Container{
 				{
 					Name:  "games-server",
-					Image: "games-server-image",
+					Image: "games-server-image", //TODO this image tag may very well need to be read from a config map...
 					Args: []string{}, //TODO need to add a bunch of arguments that set up the game server...
 				},
 			},

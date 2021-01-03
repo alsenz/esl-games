@@ -1,4 +1,5 @@
 load("@com_adobe_rules_gitops//gitops:defs.bzl", "k8s_deploy")
+load("@com_adobe_rules_gitops//skylib:push.bzl", "k8s_container_push")
 load("@io_bazel_rules_go//go:def.bzl", "go_path")
 
 CONFIGURATION_TABLE = {
@@ -64,6 +65,43 @@ genrule(
     for CONFIGURATION_NAME, (CLUSTER, PRIMARY_NAMESPACE, USER, REGISTRY) in CONFIGURATION_TABLE.items()
 ]
 
+#TODO need to push the game-server as an image and then use the substitutions...
+[
+    k8s_container_push(
+        name = "games-server-image." + CONFIGURATION_NAME + ".push",
+        image = "//cmd/game-server:game-server-image",
+        image_digest_tag = True,
+        registry = REGISTRY,
+    )
+    for CONFIGURATION_NAME, (_, _, _, REGISTRY) in CONFIGURATION_TABLE.items()
+]
+
+LESSON_CTRL_IMAGE_DIGEST_ARGUMENT_OVERLAY = """
+//TODO: need to actually build this now but we have all the parts!
+"""
+
+[
+    genrule(
+        name = "lesson-controller-gameserver-image-overlay." + CONFIGURATION_NAME + ".generate",
+        srcs = ["games-server-image." + CONFIGURATION_NAME + ".push.digest"],
+        outs = ["overlays/lesson-operator/manager.yaml"],
+        cmd = "HOME=/tmp $(execpath games-server-image." + CONFIGURATION_NAME + ".push);" +
+              "DIGEST=$$(head -c 14 $< | tail -c 7);" +
+              "FULL_GS_IMAGE=" + REGISTRY + "/cmd/game-server/games-server-image:$$DIGEST" +
+              "echo $$FULL_IMAGE >> $@"
+        tags = [
+            "local",
+            "no-sandbox",
+        ],
+        tools = ["games-server-image." + CONFIGURATION_NAME + ".push"],
+    )
+    for CONFIGURATION_NAME, (_, _, _, REGISTRY) in CONFIGURATION_TABLE.items()
+]
+
+#TODO: resolving images... localhost:32000/{BUILD_USER}/cmd/lesson-operator/lesson-operator-image:DIGEST
+#TODO digest is at bazel-bin/k8s/games-server-image.microk8s.push.digest
+#TODO could do a manual sub, but I'd rather do an overlay.... which should add a nice argument on top...
+
 #TODO give this a go see if it works
 [
     k8s_deploy(
@@ -84,6 +122,7 @@ genrule(
         namespace = PRIMARY_NAMESPACE,
         objects = [":namespace.deps." + CONFIGURATION_NAME] if DEP_MODES[DEP_MODE] else [],
         user = USER,
+        deps = ["games-server-image." + CONFIGURATION_NAME + ".push"] if DEP_MODES[DEP_MODE] else [],
     )
     for DEP_MODE in DEP_MODES
     for CONFIGURATION_NAME, (CLUSTER, PRIMARY_NAMESPACE, USER, REGISTRY) in CONFIGURATION_TABLE.items()

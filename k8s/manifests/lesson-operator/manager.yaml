@@ -24,9 +24,10 @@ spec:
     spec:
       securityContext:
         runAsUser: 65532
-      containers: #TODO: validate the command, map in the config
+      containers:
       - args:
         - --leader-elect
+        - --games-server-image games-server-image #TODO see if this works....
         image: lesson-controller
         name: manager
         securityContext:
