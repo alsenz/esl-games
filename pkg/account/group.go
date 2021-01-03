@@ -11,6 +11,6 @@ const (
 
 type Group struct {
 	model.Base
-	Name string		`gorm:"unique,uniqueIndex"`
-	Admins []User	`gorm:"many2many:group_admins,"`
+	Name string		`gorm:"unique,uniqueIndex" json:"name"`
+	Admins []User	`gorm:"many2many:group_admins," json:"-"`
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/alsenz/esl-games/pkg/account"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+	"gorm.io/datatypes"
 	"strings"
 )
 
@@ -30,6 +31,7 @@ const (
 	ContentTypeBoolean	QuestionContentType = "boolean"
 	ContentTypeMathjax	QuestionContentType = "mathjax"
 	ContentTypeAudio	QuestionContentType = "audio"
+	ContentTypeChart	QuestionContentType = "chart"
 )
 
 type QuestionLogic string
@@ -60,9 +62,9 @@ var QuestionLogics = [...]QuestionLogic{}
 //TODO slides now ALWAYS have a question filter
 
 type QuestionBehaviour struct {
-	Logic QuestionLogic //TODO json these up!
-	ContentType QuestionContentType
-	Tags []string //May include x=y pairs
+	Logic QuestionLogic	`json:"logic,omitempty"`
+	ContentType QuestionContentType `json:"contentType,omitempty"`
+	Data datatypes.JSON `json:"data,omitempty"`
 }
 
 
@@ -76,12 +78,13 @@ type Resolvable interface {
 
 type Question struct {
 	account.UserObject
-	Content string
-	Header string
-	Image string
+	Content string	`json:"content"`
+	Header string	`json:"header,omitempty"`
+	Image uuid.UUID `json:"image,omitempty"`
+	ByLine string	`json:"byline,omitempty"`
 	//TODO will have to split this manually TODO TODO JSON this
-	Tags []string //TODO gorm question - how to embed this - ah well that's not happening apparently... TODO TODO no json it!
-	Behaviour QuestionBehaviour //TODO json this up!
+	Tags []string `json:"tags"`//TODO gorm question - how to embed this - ah well that's not happening apparently... TODO TODO no json it!
+	Behaviour QuestionBehaviour `json:"behaviour"` //TODO gorm - json this up
 }
 
 func (q *Question) IsTemplated() bool {

@@ -27,10 +27,10 @@ func NewACL() *ACL {
 
 type UserObject struct {
 	model.Base
-	OwnerID uuid.UUID
-	Owner User //Gorm should use the field above to create an association by foreign key.
-	GroupID uuid.UUID
-	Group Group
+	OwnerID uuid.UUID	`json:"ownerId"`
+	Owner User 			`json:"-"`//Gorm should use the field above to create an association by foreign key.
+	GroupID uuid.UUID	`json:"-"`
+	Group Group			`json:"group"`
 	Permissions ACL		`gorm:"embedded;embeddedPrefix:acl_"`
 }
 

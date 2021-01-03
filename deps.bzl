@@ -276,6 +276,13 @@ def go_dependencies():
         version = "v1.1.1",
     )
     go_repository(
+        name = "com_github_denisenkom_go_mssqldb",
+        importpath = "github.com/denisenkom/go-mssqldb",
+        sum = "h1:VRRKCwnzqk8QCaRC4os14xoKDdbHqqlJtJA0oc1ZAjg=",
+        version = "v0.0.0-20200428022330-06a60b6afbbc",
+    )
+
+    go_repository(
         name = "com_github_dgrijalva_jwt_go",
         importpath = "github.com/dgrijalva/jwt-go",
         sum = "h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=",
@@ -476,6 +483,12 @@ def go_dependencies():
         sum = "h1:QhCBKRYqZR+SKo4gl1lPhPahope8/RLt6EVgY8X80w0=",
         version = "v0.19.5",
     )
+    go_repository(
+        name = "com_github_go_sql_driver_mysql",
+        importpath = "github.com/go-sql-driver/mysql",
+        sum = "h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=",
+        version = "v1.5.0",
+    )
 
     go_repository(
         name = "com_github_go_stack_stack",
@@ -526,6 +539,13 @@ def go_dependencies():
         sum = "h1:JjCZWpVbqXDqFVmTfYWEVTMIYrL/NPdPSCHPJ0T/raM=",
         version = "v1.4.3",
     )
+    go_repository(
+        name = "com_github_golang_sql_civil",
+        importpath = "github.com/golang-sql/civil",
+        sum = "h1:lXe2qZdvpiX5WZkZR4hgp4KJVfY3nMkvmwbVkpv1rVY=",
+        version = "v0.0.0-20190719163853-cb61b32ac6fe",
+    )
+
     go_repository(
         name = "com_github_google_btree",
         importpath = "github.com/google/btree",
@@ -956,6 +976,13 @@ def go_dependencies():
         sum = "h1:UnlwIPBGaTZfPQ6T1IGzPI0EkYAQmT9fAEJ/poFC63o=",
         version = "v0.0.2",
     )
+    go_repository(
+        name = "com_github_mattn_go_sqlite3",
+        importpath = "github.com/mattn/go-sqlite3",
+        sum = "h1:j7a/xn1U6TKA/PHHxqZuzh64CdtRc7rU9M+AvkOl5bA=",
+        version = "v1.14.3",
+    )
+
     go_repository(
         name = "com_github_matttproud_golang_protobuf_extensions",
         importpath = "github.com/matttproud/golang_protobuf_extensions",
@@ -1560,12 +1587,36 @@ def go_dependencies():
         sum = "h1:1JFLBqwIgdyHN1ZtgjTBwO+blA6gVOmZurpiMEsETKo=",
         version = "v0.5.0-alpha.5.0.20200910180754-dd1b699fc489",
     )
+    go_repository(
+        name = "io_gorm_datatypes",
+        importpath = "gorm.io/datatypes",
+        sum = "h1:5rDW3AnqXaacuQn6nB/ZNAIfTCIvmL5oKGa/TtCoBFA=",
+        version = "v1.0.0",
+    )
+    go_repository(
+        name = "io_gorm_driver_mysql",
+        importpath = "gorm.io/driver/mysql",
+        sum = "h1:+JKBYPfn1tygR1/of/Fh2T8iwuVwzt+PEJmKaXzMQXg=",
+        version = "v1.0.3",
+    )
 
     go_repository(
         name = "io_gorm_driver_postgres",
         importpath = "gorm.io/driver/postgres",
         sum = "h1:9sqNcNC9PCkZ6tMzWF1cEE2PARlCONgSqRobszSTffw=",
         version = "v1.0.6",
+    )
+    go_repository(
+        name = "io_gorm_driver_sqlite",
+        importpath = "gorm.io/driver/sqlite",
+        sum = "h1:BYfdVuZB5He/u9dt4qDpZqiqDJ6KhPqs5QUqsr/Eeuc=",
+        version = "v1.1.3",
+    )
+    go_repository(
+        name = "io_gorm_driver_sqlserver",
+        importpath = "gorm.io/driver/sqlserver",
+        sum = "h1:n5knSvyaEwufxl0aROEW90pn+aLoV9h+vahYJk1x5l4=",
+        version = "v1.0.5",
     )
 
     go_repository(
