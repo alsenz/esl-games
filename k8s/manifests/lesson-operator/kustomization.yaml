@@ -1,5 +1,5 @@
 resources:
-- manager.yaml
+- manager.yaml.tpl
 
 generatorOptions:
   disableNameSuffixHash: true

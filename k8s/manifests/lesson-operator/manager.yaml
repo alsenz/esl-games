@@ -27,7 +27,6 @@ spec:
       containers:
       - args:
         - --leader-elect
-        - --games-server-image games-server-image #TODO see if this works....
         image: lesson-controller
         name: manager
         securityContext:
