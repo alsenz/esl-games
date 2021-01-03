@@ -2,6 +2,13 @@ package account
 
 import "github.com/alsenz/esl-games/pkg/model"
 
+const (
+	CreatorsGroupName string = "creators"
+	AdminsGroupName string = "admin"
+	SuperAdminsGroupName string = "super-admin"
+	PlayersGroupName string = "players"
+)
+
 type Group struct {
 	model.Base
 	Name string		`gorm:"unique,uniqueIndex"`

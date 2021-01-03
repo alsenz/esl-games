@@ -8,13 +8,11 @@ import (
 
 type Asset struct {
   account.UserObject
-  Description string
-  Md5sum string
-  ContentType string
+  Name string         `gorm:"index"`
+  Md5sum string       `gorm:"index"`
+  ContentType string  `gorm:"index"`
   Data []byte
 }
-
-//TODO we may very much not need this but still...
 
 // This is a thread safe asset server- no state that isn't already thread safe.
 type AssetServer struct {
