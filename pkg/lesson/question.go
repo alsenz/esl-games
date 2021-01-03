@@ -5,18 +5,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"gorm.io/datatypes"
-	"strings"
 )
-
-//TODO let's simplify further and say we have a question
-
-//TODO content types...
-
-// We have a parameter N clearly
-//SingleInput, MultipleInput, SingleMultipleChoice, MultiMultipleChoice,
-//ApproximateInput (has error margin)
-//RankedMultipleChoice
-//FPTPVote, SingleTransferableVote, ProportionalVote, AlternativeVote (often has N)
 
 //Note: scoring systems for each of these... there's going to need to be a validate...
 
@@ -33,9 +22,11 @@ const (
 	ContentTypeAudio	QuestionContentType = "audio"
 	ContentTypeChart	QuestionContentType = "chart"
 )
+var QuestionContentTypes = [...]QuestionContentType{ContentTypeText, ContentTypeCanvas, ContentTypeImage,
+	ContentTypeVideo, ContentTypeNumber, ContentTypeEmoji, ContentTypeBoolean, ContentTypeMathjax, ContentTypeAudio,
+	ContentTypeChart}
 
 type QuestionLogic string
-
 const (
 	SingleInput              QuestionLogic = "Single Input"
 	SingleInputOpen          QuestionLogic = "Single Input No Right Answer"
@@ -53,28 +44,28 @@ const (
 	VotePR					 QuestionLogic = "Vote (Proportional Scoring)"
 	VoteAV					 QuestionLogic = "Vote (Alternative Vote)"
 )
+var QuestionLogics = [...]QuestionLogic{SingleInput, SingleInputOpen, MultipleInput, MultipleInputOpen, SingleMultipleChoice,
+	SingleMultipleChoiceOpen, MultiMultipleChoice, MultiMultipleChoiceOpen, MultiBestMultipleChoice, ApproximateSingleInput,
+	ApproximateMultipleInput, VoteFPTP, VoteSTV, VotePR, VoteAV}
 
-var QuestionLogics = [...]QuestionLogic{}
+type QuestionRules struct {
+	Logic QuestionLogic	`json:"logic,omitempty"`
+	ContentType QuestionContentType `json:"contentType,omitempty"`
+	Data datatypes.JSON `json:"data,omitempty"` //Extra data - e.g. best answer plus multiple choices
+	ScoringRules ScoringRules	`json:"scoringRules,omitempty"`
+}
 
 //TODO let's use go-templates liberally.
 //TODO everything is either a question or a question filter
 //TODO question filter -> resolve to question filter -> question -> resolve to question
 //TODO slides now ALWAYS have a question filter
-
-type QuestionBehaviour struct {
-	Logic QuestionLogic	`json:"logic,omitempty"`
-	ContentType QuestionContentType `json:"contentType,omitempty"`
-	Data datatypes.JSON `json:"data,omitempty"`
-}
-
+//TODO when reading off inputs, we lookup resolved questions by rounds Act 1, Scene 3, Repetition 5- nice 'n' simple
 
 //TODO
+//TODO use gorm datatypes of string - will need to write validate routine for question to make sure is correct
 //TODO 1) gorm question - doesn't work :( TODO unless we use the JSON type in postgres... TODO this is gonna be pretty important.
 
-type Resolvable interface {
-	IsTemplated() bool
-	Resolve(*Round, *gorm.DB) *Question
-}
+
 
 type Question struct {
 	account.UserObject
@@ -82,9 +73,22 @@ type Question struct {
 	Header string	`json:"header,omitempty"`
 	Image uuid.UUID `json:"image,omitempty"`
 	ByLine string	`json:"byline,omitempty"`
-	//TODO will have to split this manually TODO TODO JSON this
-	Tags []string `json:"tags"`//TODO gorm question - how to embed this - ah well that's not happening apparently... TODO TODO no json it!
-	Behaviour QuestionBehaviour `json:"behaviour"` //TODO gorm - json this up
+	TagsJSON      datatypes.JSON      `json:"tags"`
+	RulesJSON datatypes.JSON `json:"rules"`
+}
+
+func (q *Question) MakeTags() []string {
+	//TODO TODO need to conver tthis to tas string
+	return q.TagsJSON
+}
+
+func (q *Question) SetTags(tags []string) {
+	//TODO how does this become JSON?
+	q.TagsJSON =
+}
+
+func (q *Question) MakeRules() QuestionRules {
+	//TODO need to convert this plus validate it...
 }
 
 func (q *Question) IsTemplated() bool {
@@ -101,56 +105,3 @@ func (q *Question) Resolve(round *Round, _ *gorm.DB) {
 	}
 }
 
-type QuestionFilterOp string
-
-const (
-	QuestionFilterOpEquals          QuestionFilterOp = "="
-	QuestionFilterOpNotEquals       QuestionFilterOp = "!="
-	QuestionFilterLessThan          QuestionFilterOp = "<"
-	QuestionFilterLessThanEquals    QuestionFilterOp = "<="
-	QuestionFilterGreaterThan       QuestionFilterOp = ">"
-	QuestionFilterGreaterThanEquals QuestionFilterOp = ">="
-	QuestionFilterContains          QuestionFilterOp = "contains"
-	QuestionFilterStartsWith        QuestionFilterOp = "starts-with"
-)
-
-var QuestionFilterOps = [...]QuestionFilterOp{QuestionFilterOpEquals, QuestionFilterOpNotEquals, QuestionFilterLessThan,
-	QuestionFilterLessThanEquals, QuestionFilterGreaterThan, QuestionFilterGreaterThanEquals, QuestionFilterContains,
-	QuestionFilterStartsWith}
-
-type QuestionFilterLiteral struct {
-	Field string //TODO need to json this.
-	Op    QuestionFilterOp
-	Value string
-}
-
-func (qfl QuestionFilterLiteral) ToString() string {
-	return strings.Join([]string{qfl.Field, string(qfl.Op), qfl.Value}, "")
-}
-
-//TODO this basically needs to be a list of conditions
-//TODO check how gorm structures things
-type QuestionFilter struct {
-	QuestionBanks []string
-	//TODO TODO this just needs to get translated into a nice big where query
-	CNF [][]QuestionFilterLiteral
-}
-
-func (qf *QuestionFilter) ToWhere() string {
-	if qf.IsTemplated() {
-		//TODO raise an exception
-	}
-	//TODO
-}
-
-func (qf *QuestionFilter) IsTemplated() bool {
-	return false //TODO TODO
-}
-
-func (qf *QuestionFilter) Resolve(round *Round, ctx *gorm.DB) {
-	if !qf.IsTemplated() {
-		//TODO TODO this needs to call a database now as well...
-	}
-}
-
-//TODO this guy needs to be resolvable

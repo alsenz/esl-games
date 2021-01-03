@@ -4,20 +4,38 @@ import (
 	"time"
 )
 
-type Round struct {
-	ActNumber uint				// Number left-to-right - almost like an Act
-	SceneNumber uint			// Going down which number
-	Repetition uint				// A round may have multiple repetitions of that scene
+type RoundStats struct {
 	TotalSceneNumber uint		// sum of scenes in previous acts plus SceneNumber
 	StartTime time.Time
 	PlayTime time.Duration		// time since play began - time - startTime
 	Time time.Time				// the actual time
-	Players []Player			// Players ranked by score
-	CurrentLeader map[string] Player //Players for each score type
-	CurrentLoser map[string] Player //Players for each score type
-	CurrentMainLeader * Player //Optional current leader for the "main" score
-	CurrentMainLoser * Player //Optional current loser for the "main" score
-	PreviousRound * Round
+}
+
+func NewRoundStats() RoundStats {
+	now := time.Now()
+	return RoundStats{0, now, time.Since(now), now}
+}
+
+type GameInfo struct {
+	Players []Player
+	PreviousRound *Round
+}
+
+func NewGameInfo(players []Player) GameInfo {
+
+}
+
+type RoundIdx struct {
+	ActNumber uint				// Number left-to-right - almost like an Act
+	SceneNumber uint			// Going down which number
+	Repetition uint				// A round may have multiple repetitions of that scene
+}
+
+type Round struct {
+	RoundIdx
+	Stats RoundStats
+	Info GameInfo
+	Scores GameScores
 }
 
 func FirstRound(players []Player) * Round {

@@ -17,11 +17,6 @@ func GetResolvable(scene *Scene) *Resolvable {
 	return nil
 }
 
-type Act struct {
-	account.UserObject
-	Scenes []Scene
-}
-
 type Plan struct {
 	account.UserObject
 	Name string
