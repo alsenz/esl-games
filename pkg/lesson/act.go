@@ -71,21 +71,33 @@ func (rl RepeatUntilLogic) Eval(ctx *Context) (bool, error) {
 }
 
 type Act struct {
-	account.UserObject
 	Scenes  Scenes `json:"scenes"`	//This should get gorm embedded as json
 	RepeatUntil *RepeatUntilLogic `json:"repeatLogic,omitempty"` //This should get gorm embedded as json
 }
 
 func NewAct(owner account.User, group account.Group) *Act {
 	act := &Act{}
-	act.Owner = owner
-	act.OwnerID = owner.ID
-	act.Group = group
-	act.GroupID = group.ID
-	act.Permissions = *account.DefaultPermissions
 	act.Scenes = make(Scenes, 0)
 	act.RepeatUntil = nil
 	return act
+}
+
+type Acts []Act
+
+func (acts Acts) Value() (driver.Value, error) {
+	if raw, err := json.Marshal(acts); err != nil {
+		return nil, err
+	} else {
+		return datatypes.JSON(raw).Value()
+	}
+}
+
+func (acts Acts) Scan(src interface{}) error {
+	jsn := &datatypes.JSON{}
+	if err := jsn.Scan(src); err != nil {
+		return err
+	}
+	return json.Unmarshal(*jsn, acts)
 }
 
 func (a *Act) CouldFinishAct(ctx *Context) (bool, error) {

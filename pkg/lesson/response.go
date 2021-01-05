@@ -2,9 +2,10 @@ package lesson
 
 //TODO need to break out certain responses here... TODO TODO
 
-type PlayerResponse struct {
-	//TODO! this is gonna need to be pretty generic
-	Response interface{}
+type Response struct {
+	Question *Question
+	//TODO! this is gonna need to be pretty generic - make this work some'ow ;) Would be
+	Data interface{}
 }
 
-type PlayerResponses map[Player]PlayerResponse
+

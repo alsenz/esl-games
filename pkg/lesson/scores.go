@@ -30,6 +30,10 @@ type Scores struct {
 	TeamScores TeamScores
 }
 
+func NewScores() Scores {
+	return Scores{make(PlayerScores), make(TeamScores)}
+}
+
 type ScoringLogic string
 const (
 	Simple 			 ScoringLogic = "simple"

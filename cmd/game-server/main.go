@@ -6,6 +6,7 @@ package main
 
 import (
 	"flag"
+	"github.com/alsenz/esl-games/pkg/lesson"
 	"html/template"
 	"log"
 	"net/http"
@@ -44,10 +45,21 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//TODO let's get a bunch of flags together here... these are as important
 	flag.Parse()
 	log.SetFlags(0)
-	http.HandleFunc("/echo", echo)
-	http.HandleFunc("/", home)
+	//TODO plan needs to be asynchronously set
+	//
+	register := lesson.Register{
+		Timeout:      0,
+		Done:         false,
+		RequireLogin: false,
+		OptDomain:    nil,
+		LessonCode:   "",
+	}
+	lessonSrv := lesson.NewLesson(register)
+	http.HandleFunc("/register", echo)
+	http.HandleFunc("/theatre", home)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 

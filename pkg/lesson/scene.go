@@ -40,7 +40,9 @@ type SceneClasses struct {
 }
 
 type Scene struct {
-	OptionalQuestionFilter *QuestionFilter //May be a template
+	OptionalQuestionFilter *QuestionFilter //May be a template. Only one question filter per scene
+									//... but may generate one random or multiple random questions (with "links") back to
+									//... the corresponding round of generation.
 	Layout LayoutFlags
 	Title string
 }

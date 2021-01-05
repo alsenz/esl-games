@@ -74,20 +74,16 @@ func (qr *QuestionRules) Scan(src interface{}) error {
 	return json.Unmarshal(*jsn, qr)
 }
 
+//TODO TODO STOP STOP
+//TODO remove this - what could Tag be _other than_ the link for the player...?
+//TODO and if we're going through players then there never needs to be a problem...?
+type QuestionLink struct {
+	RoundGenerated RoundIdx //Gives us the question filter generated from
+	Tag string //If multiple generated on a round, this string disambiguates a bit.
+}
 
-
-
-//TODO let's use go-templates liberally.
-//TODO everything is either a question or a question filter
-//TODO question filter -> resolve to question filter -> question -> resolve to question
-//TODO slides now ALWAYS have a question filter
-//TODO when reading off inputs, we lookup resolved questions by rounds Act 1, Scene 3, Repetition 5- nice 'n' simple
-
-//TODO
-//TODO use gorm datatypes of string - will need to write validate routine for question to make sure is correct
-//TODO 1) gorm question - doesn't work :( TODO unless we use the JSON type in postgres... TODO this is gonna be pretty important.
-
-
+//TODO no not this structure
+type QuestionLinks map[RoundIdx]map[QuestionLink]Question
 
 type Question struct {
 	account.UserObject
@@ -97,7 +93,6 @@ type Question struct {
 	ByLine string	`json:"byline,omitempty"`
 	TagsJSON pq.StringArray `json:"tags" gorm:"type:varchar(64)[]"`
 	Rules QuestionRules `json:"rules"`
-	//TODO answers?
 }
 
 type ResolvedQuestion struct {

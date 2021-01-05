@@ -1,9 +1,7 @@
 package lesson
 
 import (
-	"bytes"
 	"time"
-	"text/template"
 )
 
 type RoundStats struct {
@@ -18,11 +16,11 @@ func NewRoundStats() RoundStats {
 }
 
 func (rs RoundStats) RefreshRoundStats() RoundStats {
-	//TODO just refresh the Time to be now and return a copy.
+	return RoundStats{rs.QuestionNumber, rs.StartTime, time.Now()}
 }
 
 func (rs *RoundStats) PlayTime() time.Duration {
-	return time.Since(rs.StartTime) //TODO review the logic on this a bit
+	return time.Since(rs.StartTime)
 }
 
 type RoundIdx struct {
@@ -35,38 +33,36 @@ type Round struct {
 	RoundIdx
 	Stats RoundStats
 	PreviousRound *Round
+	LinkedQuestions QuestionLinks
 }
 
-//TODO need total scene number TotalSceneCount
-
-//TODO pick these up and tidy / fix.
+// Get the linked question if there is one, or a random linked question if there are many
+func (round *Round) LinkedQuestion() (* Question) {
+	for _, val := range round.LinkedQuestions {
+		for _, val := range val {
+			return &val
+		}
+		break
+	}
+	return nil
+}
 
 func FirstRound() * Round {
-	return &Round{RoundIdx{1, 1, 0}, NewRoundStats(), nil}
+	return &Round{RoundIdx{1, 1, 0}, NewRoundStats(), nil,
+		make(QuestionLinks)}
 }
 
-func (* Round) NextAct(currentRound * Round) * Round {
-	//TODO need to refresh the stats.
-	rIdx := RoundIdx{currentRound.RoundIdx.ActNumber + 1, 1, 0}
-	return &Round{rIdx, currentRound.}
+func (round* Round) NextAct(nextLinkedQuestions QuestionLinks) * Round {
+	rIdx := RoundIdx{round.RoundIdx.ActNumber + 1, 1, 0}
+	return &Round{rIdx, round.Stats.RefreshRoundStats(), round, nextLinkedQuestions}
 }
 
-func (* Round) NextScene(currentRound * Round) * Round {
-	now := time.Now()
-	return &Round{currentRound.ActNumber, currentRound.SceneNumber+1, currentRound.Repetition,
-		currentRound.TotalSceneNumber+1, currentRound.StartTime, time.Since(currentRound.StartTime),
-		now, currentRound.Players, currentRound.CurrentLeader, currentRound.CurrentLoser,
-		currentRound.CurrentMainLeader, currentRound.CurrentMainLoser, currentRound}
+func (round* Round) NextScene(nextLinkedQuestions QuestionLinks) * Round {
+	rIdx := RoundIdx{round.RoundIdx.ActNumber, round.SceneNumber + 1, round.Repetition}
+	return &Round{rIdx, round.Stats.RefreshRoundStats(), round, nextLinkedQuestions}
 }
 
-func (* Round) RepeatAct(currentRound * Round) * Round {
-	now := time.Now()
-	return &Round{currentRound.ActNumber, 1, currentRound.Repetition + 1,
-		currentRound.TotalSceneNumber+1, currentRound.StartTime, time.Since(currentRound.StartTime),
-		now, currentRound.Players, currentRound.CurrentLeader, currentRound.CurrentLoser,
-		currentRound.CurrentMainLeader, currentRound.CurrentMainLoser, currentRound}
+func (round* Round) RepeatAct(nextLinkedQuestions QuestionLinks) * Round {
+	rIdx := RoundIdx{round.RoundIdx.ActNumber, 1, round.Repetition + 1}
+	return &Round{rIdx, round.Stats.RefreshRoundStats(), round, nextLinkedQuestions}
 }
-
-
-
-//TODO we need to make a round from next scene

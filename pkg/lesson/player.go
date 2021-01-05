@@ -6,7 +6,7 @@ type Player struct {
 	Avatar []byte //This may or not contain an image...
 	ScoreCard ScoreCard
 	AllScoreCards map[RoundIdx]ScoreCard
-	Responses map[RoundIdx]map[QuestionLink]PlayerResponse
+	Responses map[RoundIdx]Response //Links the players response to the question for them generated at that round
 }
 
 type Team struct {
