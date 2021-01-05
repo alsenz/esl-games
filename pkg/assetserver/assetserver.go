@@ -19,6 +19,8 @@ type AssetServer struct {
   conn *gorm.DB
 }
 
+//TODO note we're just going to re-use the asset server to serve css too..
+
 func NewAssetServer(pgConnection string) *AssetServer {
   assetServer := AssetServer{}
   db, err := gorm.Open(postgres.Open(pgConnection), &gorm.Config{})

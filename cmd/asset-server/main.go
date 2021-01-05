@@ -7,6 +7,10 @@ import (
     "net/http"
 )
 
+//TODO let's sub in mux here! TODO TODO
+
+//TODO
+
 func main() {
     pgHost := flag.String("pg-host", "localhost", "Postgresql database host")
     pgPort := flag.String("pg-port", "5432", "Postgresql database port")

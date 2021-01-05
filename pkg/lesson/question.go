@@ -1,7 +1,10 @@
 package lesson
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"github.com/alsenz/esl-games/pkg/account"
+	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"gorm.io/datatypes"
@@ -14,7 +17,7 @@ const (
 	ContentTypeText		QuestionContentType = "text"
 	ContentTypeCanvas	QuestionContentType = "canvas"
 	ContentTypeImage	QuestionContentType = "image"
-	ContentTypeVideo	QuestionContentType = "video"
+	ContentTypeVideo	QuestionContentType = "gif"
 	ContentTypeNumber	QuestionContentType = "number"
 	ContentTypeEmoji	QuestionContentType = "emoji"
 	ContentTypeBoolean	QuestionContentType = "boolean"
@@ -55,6 +58,25 @@ type QuestionRules struct {
 	ScoringRules ScoringRules	`json:"scoringRules,omitempty"`
 }
 
+func (qr *QuestionRules) Value() (driver.Value, error) {
+	if raw, err := json.Marshal(qr); err != nil {
+		return nil, err
+	} else {
+		return datatypes.JSON(raw).Value()
+	}
+}
+
+func (qr *QuestionRules) Scan(src interface{}) error {
+	jsn := &datatypes.JSON{}
+	if err := jsn.Scan(src); err != nil {
+		return err
+	}
+	return json.Unmarshal(*jsn, qr)
+}
+
+
+
+
 //TODO let's use go-templates liberally.
 //TODO everything is either a question or a question filter
 //TODO question filter -> resolve to question filter -> question -> resolve to question
@@ -73,35 +95,20 @@ type Question struct {
 	Header string	`json:"header,omitempty"`
 	Image uuid.UUID `json:"image,omitempty"`
 	ByLine string	`json:"byline,omitempty"`
-	TagsJSON      datatypes.JSON      `json:"tags"`
-	RulesJSON datatypes.JSON `json:"rules"`
+	TagsJSON pq.StringArray `json:"tags" gorm:"type:varchar(64)[]"`
+	Rules QuestionRules `json:"rules"`
+	//TODO answers?
 }
 
-func (q *Question) MakeTags() []string {
-	//TODO TODO need to conver tthis to tas string
-	return q.TagsJSON
+type ResolvedQuestion struct {
+	Question
 }
 
-func (q *Question) SetTags(tags []string) {
-	//TODO how does this become JSON?
-	q.TagsJSON =
-}
-
-func (q *Question) MakeRules() QuestionRules {
-	//TODO need to convert this plus validate it...
-}
-
-func (q *Question) IsTemplated() bool {
-	//TODO check that either of Content or Header is templated.
-	return false
-}
-
+//TODO
 //TODO TODO change this actually we wanna copy this thing...
 // Note- this resolves in place!
-func (q *Question) Resolve(round *Round, _ *gorm.DB) {
-	if !q.IsTemplated() {
-		q.ID = uuid.NewV4()                             //We need to give ourselves a new UUID since technically this is a new question
-		q.Content = "TODO need to turn into a template" //TODO turn into a tempalte
-	}
+func (q *Question) Resolve(ctx *Context, _ *gorm.DB) *ResolvedQuestion {
+	q.ID = uuid.NewV4()                             //We need to give ourselves a new UUID since technically this is a new question
+	q.Content = "TODO need to turn into a template" //TODO turn into a template
 }
 

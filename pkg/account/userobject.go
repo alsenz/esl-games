@@ -25,6 +25,8 @@ func NewACL() *ACL {
 	return &acl
 }
 
+var DefaultPermissions *ACL = NewACL()
+
 type UserObject struct {
 	model.Base
 	OwnerID uuid.UUID	`json:"ownerId"`

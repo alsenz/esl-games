@@ -1,28 +1,28 @@
 package lesson
 
 import (
+	"bytes"
 	"time"
+	"text/template"
 )
 
 type RoundStats struct {
-	TotalSceneNumber uint		// sum of scenes in previous acts plus SceneNumber
+	QuestionNumber uint 		// total number of scenes that were also questions
 	StartTime time.Time
-	PlayTime time.Duration		// time since play began - time - startTime
 	Time time.Time				// the actual time
 }
 
 func NewRoundStats() RoundStats {
 	now := time.Now()
-	return RoundStats{0, now, time.Since(now), now}
+	return RoundStats{0, now, now}
 }
 
-type GameInfo struct {
-	Players []Player
-	PreviousRound *Round
+func (rs RoundStats) RefreshRoundStats() RoundStats {
+	//TODO just refresh the Time to be now and return a copy.
 }
 
-func NewGameInfo(players []Player) GameInfo {
-
+func (rs *RoundStats) PlayTime() time.Duration {
+	return time.Since(rs.StartTime) //TODO review the logic on this a bit
 }
 
 type RoundIdx struct {
@@ -34,23 +34,21 @@ type RoundIdx struct {
 type Round struct {
 	RoundIdx
 	Stats RoundStats
-	Info GameInfo
-	Scores GameScores
+	PreviousRound *Round
 }
 
-func FirstRound(players []Player) * Round {
-	now := time.Now()
-	return &Round{1, 1, 1, 0, now,
-		time.Since(now), now, players, make(map[string]Player),
-		make(map[string]Player), nil, nil, nil}
+//TODO need total scene number TotalSceneCount
+
+//TODO pick these up and tidy / fix.
+
+func FirstRound() * Round {
+	return &Round{RoundIdx{1, 1, 0}, NewRoundStats(), nil}
 }
 
 func (* Round) NextAct(currentRound * Round) * Round {
-	now := time.Now()
-	return &Round{currentRound.ActNumber+1, 1, 1, currentRound.TotalSceneNumber+1,
-		currentRound.StartTime, time.Since(currentRound.StartTime), now, currentRound.Players,
-		currentRound.CurrentLeader, currentRound.CurrentLoser, currentRound.CurrentMainLeader,
-		currentRound.CurrentMainLoser, currentRound}
+	//TODO need to refresh the stats.
+	rIdx := RoundIdx{currentRound.RoundIdx.ActNumber + 1, 1, 0}
+	return &Round{rIdx, currentRound.}
 }
 
 func (* Round) NextScene(currentRound * Round) * Round {

@@ -1,6 +1,7 @@
 package lesson
 
 import (
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -15,15 +16,33 @@ func (qfl QuestionFilterLiteral) ToString() string {
 	return strings.Join([]string{qfl.Field, string(qfl.Op), qfl.Value}, "")
 }
 
-//TODO this basically needs to be a list of conditions
-//TODO check how gorm structures things
-type QuestionFilter struct {
+type QuestionIDList []uuid.UUID
+
+type QuestionFilterQuery struct {
 	QuestionBanks []string
 	//TODO TODO this just needs to get translated into a nice big where query
 	CNF [][]QuestionFilterLiteral
 }
 
-func (qf *QuestionFilter) ToWhere() string {
+func (qfq *QuestionFilterQuery) IsTemplated() bool {
+	return false //TODO TODO
+}
+
+func (qfq *QuestionFilterQuery) ToWhereClause() string {
+	if qfq.IsTemplated() {
+		//TODO raise an exception
+	}
+	//TODO
+}
+
+//TODO this basically needs to be a list of conditions
+//TODO check how gorm structures things
+type QuestionFilter struct {
+	QuestionIds []uuid.UUID //Either-or
+	Query QuestionFilterQuery //Eitehr-or
+}
+
+func (qf *QuestionFilter) ToWhereClause() string {
 	if qf.IsTemplated() {
 		//TODO raise an exception
 	}
@@ -34,11 +53,11 @@ func (qf *QuestionFilter) IsTemplated() bool {
 	return false //TODO TODO
 }
 
-func (qf *QuestionFilter) Resolve(round *Round, ctx *gorm.DB) {
+// usedQuesIds is to ensure we don't have any repeats
+func (qf *QuestionFilter) Resolve(round *Round, ctx *gorm.DB, usedQuesIds map[uuid.UUID]bool) {
 	if !qf.IsTemplated() {
 		//TODO TODO this needs to call a database now as well...
 	}
+	//TODO we need an ORDER BY where we put the used questions at the bottom of the list!
 }
-
-//TODO this guy needs to be resolvable
 
