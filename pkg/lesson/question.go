@@ -74,12 +74,10 @@ func (qr *QuestionRules) Scan(src interface{}) error {
 	return json.Unmarshal(*jsn, qr)
 }
 
-//TODO TODO STOP STOP
-//TODO remove this - what could Tag be _other than_ the link for the player...?
-//TODO and if we're going through players then there never needs to be a problem...?
 type QuestionLink struct {
-	RoundGenerated RoundIdx //Gives us the question filter generated from
-	Tag string //If multiple generated on a round, this string disambiguates a bit.
+	Providence RoundIdx //Gives us the question filter generated from
+	OptPlayerToken uuid.UUID //Multiple questions may be generated, BUT one person always only gets one question
+			//... if you want to simulate multi questions per user, either use act repeats or an exotic question type!
 }
 
 //TODO no not this structure
@@ -102,7 +100,7 @@ type ResolvedQuestion struct {
 //TODO
 //TODO TODO change this actually we wanna copy this thing...
 // Note- this resolves in place!
-func (q *Question) Resolve(ctx *Context, _ *gorm.DB) *ResolvedQuestion {
+func (q *Question) Resolve(ctx *LessonModel, _ *gorm.DB) *ResolvedQuestion {
 	q.ID = uuid.NewV4()                             //We need to give ourselves a new UUID since technically this is a new question
 	q.Content = "TODO need to turn into a template" //TODO turn into a template
 }

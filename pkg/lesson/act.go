@@ -13,7 +13,7 @@ type RepeatCondition struct {
 	RHS string `json:"rhs"`
 }
 
-func (rc RepeatCondition) Eval(ctx *Context) (bool, error) {
+func (rc RepeatCondition) Eval(ctx *LessonModel) (bool, error) {
 	if lhs, err := ctx.Eval(rc.LHS); err == nil {
 		if rhs, err := ctx.Eval(rc.RHS); err == nil {
 			return rc.Op.Eval(lhs, rhs), nil
@@ -47,7 +47,7 @@ func (rul *RepeatUntilLogic) Scan(src interface{}) error {
 }
 
 // Eval returns true if we should break out and continue (i.e. no longer repeat) - the repeat condition is satisfied
-func (rl RepeatUntilLogic) Eval(ctx *Context) (bool, error) {
+func (rl RepeatUntilLogic) Eval(ctx *LessonModel) (bool, error) {
 	if len(rl.CNF) == 0 {
 		return ctx.Round.Repetition >= uint(rl.Fixed), nil
 	}
@@ -100,6 +100,6 @@ func (acts Acts) Scan(src interface{}) error {
 	return json.Unmarshal(*jsn, acts)
 }
 
-func (a *Act) CouldFinishAct(ctx *Context) (bool, error) {
+func (a *Act) CouldFinishAct(ctx *LessonModel) (bool, error) {
 	return a.RepeatUntil.Eval(ctx)
 }

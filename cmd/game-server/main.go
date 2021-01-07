@@ -18,6 +18,12 @@ var addr = flag.String("addr", "localhost:8080", "http service address")
 
 var upgrader = websocket.Upgrader{} // use default options
 
+//TODO use https://github.com/pascaldekloe/jwt
+//TODO use https://github.com/unrolled/secure
+
+//TODO: use for testing: docker pull docker.pkg.github.com/navikt/mock-oauth2-server/mock-oauth2-server
+//TODO this also looks good: docker run --rm -it -p 4593:4593 rafaelhdr/glewlwyd-oauth2-server:quickstart
+
 func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
