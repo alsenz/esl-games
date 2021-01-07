@@ -1,9 +1,11 @@
 package lesson
 
 import (
+	"errors"
 	"github.com/alsenz/esl-games/pkg/account"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type Plan struct {
@@ -14,30 +16,37 @@ type Plan struct {
 	Acts []Act // This is also embedded.
 }
 
-//TODO: this needs a better name. It's what the planner gives the controller to run the next round with
-type NextQuestionDelivery struct {
-	NextRoundDef RoundIdx //Planner decides what the next round is
-	//TODO
-}
-
 type Planner struct {
 	PlanID uuid.UUID
 	Plan Plan
-	// Channels from the event loop
-	NextRoundChannelIn <-chan ReadyForNextRound
-	// Channels with the controller
-	//TODO
-	QuestionFilterResolverOut chan<- QuestionFilterQuery
-	QuestionFilterResolverIn <-chan QuestionFilterQuery
-	//TODO bugger - HTF does Planner know what the next round will be?
-	//TOOD TODO revisit
-
+	conn *gorm.DB
+	//A channel for making some of the fetch from the db async
+	QuestionRetrievalChannel chan map[QuestionLink]Question
 }
 
-//TODO not sure if this exists anymore...? TODO TODO move this to planner
-func (planner *Planner) LoadPlan(planId uuid.UUID, planChannel chan Plan) {
+func NewPlanner(planID uuid.UUID, conn *gorm.DB) *Planner {
+	return &Planner{planID, nil, conn, make(chan map[QuestionLink]Question, 8)}
+}
+
+func (planner *Planner) Start() error {
+	return planner.LoadPlan()
+}
+
+func (planner *Planner) LoadPlan() error {
 	zap.L().Info("Loading Plan")
-	//TODO gorm out the plan and send it into a channel of plans
+	planner.Plan = Plan{}
+	result:= planner.conn.Where("id = ?", planner.PlanID).First(&planner.Plan)
+	return result.Error
 }
 
-//TODO any utilities here that would help
+//TODO need to write a simple routine for running a quesiton filter
+func (planner *Planner) FetchQuestions(query *QuestionFilterQuery) error {
+	if(query.IsTemplated()) {
+		return errors.New("Can't fetch templated question, needs to be resolved first")
+	}
+	//TODO we wanna call resolve on a model first...
+	//TODO TODO review and check the form api again.
+	asset := &Question{} //TODO chekc multi... TODO TODO
+	result:= as.conn.Where("id = ? AND md5sum = ?", assetId, sig).First(&asset)
+	//TODO shove them back in the channel TODO TODO
+}

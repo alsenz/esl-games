@@ -100,7 +100,7 @@ type ResolvedQuestion struct {
 //TODO
 //TODO TODO change this actually we wanna copy this thing...
 // Note- this resolves in place!
-func (q *Question) Resolve(ctx *LessonModel, _ *gorm.DB) *ResolvedQuestion {
+func (q *Question) Resolve(ctx *Model, _ *gorm.DB) *ResolvedQuestion {
 	q.ID = uuid.NewV4()                             //We need to give ourselves a new UUID since technically this is a new question
 	q.Content = "TODO need to turn into a template" //TODO turn into a template
 }

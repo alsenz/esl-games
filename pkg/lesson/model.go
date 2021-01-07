@@ -6,7 +6,7 @@ import (
 )
 
 
-type LessonModel struct {
+type Model struct {
 	Round Round
 	AllRounds map[RoundIdx]Round
 	Players []Player
@@ -14,13 +14,13 @@ type LessonModel struct {
 	Scores Scores
 }
 
-func NewLessonModel() *LessonModel {
-	return &LessonModel{*FirstRound(), make(map[RoundIdx]Round), make([]Player, 0),
+func NewLessonModel() *Model {
+	return &Model{*FirstRound(), make(map[RoundIdx]Round), make([]Player, 0),
 		make([]Team, 0), NewScores()}
 }
 
 
-func (ctx *LessonModel) Eval(str string) (string, error) {
+func (ctx *Model) Eval(str string) (string, error) {
 	if tpl, err := template.New("template").Parse(str); err == nil {
 		buf := &bytes.Buffer{}
 		if err = tpl.Execute(buf, ctx); err != nil {

@@ -25,7 +25,7 @@ type Lesson struct {
 	ResolvedQuestions map[RoundIdx]map[QuestionLink]Question //Maps resolved questions asked at each round
 
 	//TODO this to sit on the controller
-	LessonModel       *LessonModel                           //Used for state keeping and evaluation of strings
+	Model       *Model //Used for state keeping and evaluation of strings
 
 
 	//TODO may not need this

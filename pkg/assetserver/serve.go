@@ -24,7 +24,7 @@ func (as *AssetServer) ServeAsset(w http.ResponseWriter, r *http.Request) {
 
 		asset := &Asset{}
 		result:= as.conn.Where("id = ? AND md5sum = ?", assetId, sig).First(&asset)
-		if result.Error == nil {
+		if result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Either asset not found or sig incorrect", 404)
 			} else {
