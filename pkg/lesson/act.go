@@ -47,12 +47,12 @@ func (rul *RepeatUntilLogic) Scan(src interface{}) error {
 }
 
 // Eval returns true if we should break out and continue (i.e. no longer repeat) - the repeat condition is satisfied
-func (rl RepeatUntilLogic) Eval(ctx *Model) (bool, error) {
-	if len(rl.CNF) == 0 {
-		return ctx.Round.Repetition >= uint(rl.Fixed), nil
+func (rul RepeatUntilLogic) Eval(ctx *Model) (bool, error) {
+	if len(rul.CNF) == 0 {
+		return ctx.Round.Repetition >= uint(rul.Fixed), nil
 	}
 	allCjsTrue := true
-	for _, disjunct := range rl.CNF {
+	for _, disjunct := range rul.CNF {
 		anyDjTrue := false
 		for _, literal := range disjunct {
 			if eval, err := literal.Eval(ctx); err != nil {

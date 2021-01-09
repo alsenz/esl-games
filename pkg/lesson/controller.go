@@ -6,7 +6,7 @@ type Controller struct {
 
 	//Channels...
 	// Channels for communicating with the event loop
-	NextRoundChannelIn <-chan ReadyForNextRound
+	NextRoundChannelIn <-chan MoveOnEvent
 	PlayerResponseIn <-chan PlayerResponseEvent
 	PlayerRegisterIn <-chan RegistrationEvent
 	ShowScreenChannel chan<- ShowScreenEvent

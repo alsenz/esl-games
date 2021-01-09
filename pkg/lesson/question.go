@@ -74,14 +74,7 @@ func (qr *QuestionRules) Scan(src interface{}) error {
 	return json.Unmarshal(*jsn, qr)
 }
 
-type QuestionLink struct {
-	Providence RoundIdx //Gives us the question filter generated from
-	OptPlayerToken uuid.UUID //Multiple questions may be generated, BUT one person always only gets one question
-			//... if you want to simulate multi questions per user, either use act repeats or an exotic question type!
-}
-
-//TODO no not this structure
-type QuestionLinks map[RoundIdx]map[QuestionLink]Question
+type QuestionDraw map[RoundIdx]map[PlayerToken]Question
 
 type Question struct {
 	account.UserObject
@@ -89,7 +82,7 @@ type Question struct {
 	Header string	`json:"header,omitempty"`
 	Image uuid.UUID `json:"image,omitempty"`
 	ByLine string	`json:"byline,omitempty"`
-	TagsJSON pq.StringArray `json:"tags" gorm:"type:varchar(64)[]"`
+	Tags pq.StringArray `json:"tags" gorm:"type:varchar(64)[]"`
 	Rules QuestionRules `json:"rules"`
 }
 
@@ -97,11 +90,30 @@ type ResolvedQuestion struct {
 	Question
 }
 
-//TODO
-//TODO TODO change this actually we wanna copy this thing...
-// Note- this resolves in place!
-func (q *Question) Resolve(ctx *Model, _ *gorm.DB) *ResolvedQuestion {
-	q.ID = uuid.NewV4()                             //We need to give ourselves a new UUID since technically this is a new question
-	q.Content = "TODO need to turn into a template" //TODO turn into a template
+func (q *Question) Resolve(mdl *Model, _ *gorm.DB) (* ResolvedQuestion, error) {
+	base := q.UserObject
+	base.ID = uuid.NewV4() // Regenerate ID to denote that it's a different question.
+	var content, header, byline string
+	var err error
+	if content, err = mdl.Eval(q.Content); err != nil {
+		return nil, err
+	}
+	if header, err = mdl.Eval(q.Header); err != nil {
+		return nil, err
+	}
+	if byline, err = mdl.Eval(q.ByLine); err != nil {
+		return nil, err
+	}
+	return &ResolvedQuestion{
+		Question{
+			base,
+			content,
+			header,
+			q.Image,
+			byline,
+			q.Tags,
+			q.Rules,
+		},
+	}, nil
 }
 

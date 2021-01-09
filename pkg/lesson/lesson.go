@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+//TODO this is mostly going.
+
 //TODO lesson's gonna need a "status" API to say what auth is required - the web app can then go <loading/><auth/><noauth/> type thing.
 //TODO TODO
 

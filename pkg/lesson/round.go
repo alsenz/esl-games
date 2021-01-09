@@ -31,9 +31,9 @@ type RoundIdx struct {
 
 type Round struct {
 	RoundIdx
-	Stats RoundStats
-	PreviousRound *Round
-	LinkedQuestions QuestionLinks
+	Stats           RoundStats
+	PreviousRound   *Round
+	LinkedQuestions QuestionDraw
 }
 
 // Get the linked question if there is one, or a random linked question if there are many
@@ -49,20 +49,20 @@ func (round *Round) LinkedQuestion() (* Question) {
 
 func FirstRound() * Round {
 	return &Round{RoundIdx{1, 1, 0}, NewRoundStats(), nil,
-		make(QuestionLinks)}
+		make(QuestionDraw)}
 }
 
-func (round* Round) NextAct(nextLinkedQuestions QuestionLinks) * Round {
+func (round* Round) NextAct(nextLinkedQuestions QuestionDraw) * Round {
 	rIdx := RoundIdx{round.RoundIdx.ActNumber + 1, 1, 0}
 	return &Round{rIdx, round.Stats.RefreshRoundStats(), round, nextLinkedQuestions}
 }
 
-func (round* Round) NextScene(nextLinkedQuestions QuestionLinks) * Round {
+func (round* Round) NextScene(nextLinkedQuestions QuestionDraw) * Round {
 	rIdx := RoundIdx{round.RoundIdx.ActNumber, round.SceneNumber + 1, round.Repetition}
 	return &Round{rIdx, round.Stats.RefreshRoundStats(), round, nextLinkedQuestions}
 }
 
-func (round* Round) RepeatAct(nextLinkedQuestions QuestionLinks) * Round {
+func (round* Round) RepeatAct(nextLinkedQuestions QuestionDraw) * Round {
 	rIdx := RoundIdx{round.RoundIdx.ActNumber, 1, round.Repetition + 1}
 	return &Round{rIdx, round.Stats.RefreshRoundStats(), round, nextLinkedQuestions}
 }

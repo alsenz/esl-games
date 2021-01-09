@@ -2,20 +2,52 @@ package lesson
 
 import (
 	"encoding/json"
-	"github.com/gofrs/uuid"
 )
-
-type MessageType string
-const (
-	SkipMessage MessageType = "Skip"
-	ScreenMessage MessageType = "Screen" //Render a screen
-)
-var TheatreMessages = map[MessageType]bool{SkipMessage: true, ScreenMessage: true}
-var ConsoleMessages = map[MessageType]bool{}
 
 type Message struct {
-	OptPlayerID uuid.UUID	`json:"playerId,omitempty"`
-	Type MessageType		`json:"type"`
-	Round RoundIdx			`json:"round,omitempty"` //Helps idempotency and avoids races
-	Data json.RawMessage	`json:"data,omitempty"`
+	OptPlayerToken PlayerToken     `json:"playerId,omitempty"`
+	Round          RoundIdx        `json:"round,omitempty"` //Helps idempotency and avoids races
+	Data           json.RawMessage `json:"data,omitempty"`
+}
+
+type ConsoleMessageInType string
+const (
+	ConsoleSkipMessage ConsoleMessageInType = "skip"
+	RegisterMessage ConsoleMessageInType = "register"
+)
+
+type ConsoleMessageIn struct {
+	Message
+	Type ConsoleMessageInType	`json:"type"`
+}
+
+type ConsoleMessageOutType string
+const (
+	//TODO add some real messages here
+	DummyMessage ConsoleMessageOutType = "dummy"
+)
+
+type ConsoleMessageOut struct {
+	Message
+	Type ConsoleMessageOutType	`json:"type"`
+}
+
+type TheatreMessageInType string
+const (
+	TheatreSkipMessage TheatreMessageInType = "skip"
+)
+
+type TheatreMessageIn struct {
+	Message
+	Type TheatreMessageInType `json:"type"`
+}
+
+type TheatreMessageOutType string
+const (
+	ScreenMessage TheatreMessageOutType = "screen" //Render a screen
+)
+
+type TheatreMessageOut struct {
+	Message
+	Type TheatreMessageOutType `json:"type"`
 }
