@@ -1,6 +1,7 @@
 package lesson
 
 import (
+	"encoding/json"
 	"go.uber.org/zap"
 	"time"
 )
@@ -23,10 +24,10 @@ type EventLoop struct {
 	RegistrationTimeout time.Duration
 	// Channels for sending and receiving messages to/from theatre websockets
 	TheatreChannelIn <-chan TheatreMessageIn
-	TheatreChannelOut chan<- TheatreMessageOut
+	TheatreChannelOuts []chan<- TheatreMessageOut
 	// Channels for sending and receiving messages to/from console websockets
 	ConsoleChannelIn <-chan ConsoleMessageIn
-	ConsoleChannelOut chan<- ConsoleMessageOut
+	ConsoleChannelOuts map[PlayerToken]chan<- ConsoleMessageOut
 	// Channels for telling the planner that we can move to another round
 	PlannerChannelOut chan<- MoveOnEvent
 	// Channels for telling the controller about state changes
@@ -50,6 +51,11 @@ func (loop *EventLoop) AfterRegistration() error {
 	return nil
 }
 
+// Console Messages sometimes come with new output channels to map players to
+func (loop *EventLoop) updatePlayerOut(playerToken PlayerToken, playerOut chan<- ConsoleMessageOut) {
+	loop.ConsoleChannelOuts[playerToken] = playerOut
+}
+
 func (loop *EventLoop) DoRegistration() error {
 	zap.L().Info("StartRegistration")
 	if err := loop.BeforeRegistration(); err != nil {
@@ -59,13 +65,17 @@ func (loop *EventLoop) DoRegistration() error {
 		for {
 		select {
 		case msg := <-loop.ConsoleChannelIn:
+			if msg.OptOutChan != nil {
+				loop.updatePlayerOut(msg.PlayerToken, *msg.OptOutChan)
+			}
 			switch msg.Type {
 			case ConsoleSkipMessage: //Only the leader can skip the registration
-				if msg.OptPlayerToken == loop.LeaderPlayerToken {
+				if msg.PlayerToken == loop.LeaderPlayerToken {
 					break Loop
 				}
-			case RegisterMessage:
-				//TODO actually do the registration... review the task at hand...
+			case ConsoleRegisterMessage:
+				//TODO the first step is to ensure that the output channel is right
+				//TODO the next step is to add the player to the controller
 			default:
 				zap.L().Warn("ConsoleInMessageType " + string(msg.Type) + " is not accepted at this stage.")
 			}
@@ -122,7 +132,17 @@ func (loop *EventLoop) LessonEnd() error {
 	if err := loop.BeforeLessonEnd(); err != nil {
 		return err
 	}
-	//TODO close down some clients... TODO TODO possibly send a load of stuff
+	//TODO close down some clients... TODO TODO possibly send a load of stuff - ideally really send a load of end game messages
+	//TODO how to SEND to a channel? TODO TODO
+	//TODO so far so ok...
+	//TODO but how to BROADCAST to channel? Apparently this is impossible... TODO so we're going to need a list
+	for consoleChannel := range loop.ConsoleChannelOuts {
+		consoleChannel <- ConsoleMessageOut{Message{
+			nil, //This is for all players
+			loop.CurrentRound,
+			json.RawMessage{}, //No extra info required
+		}, ConsoleEndGameMessage}
+	}
 	if err := loop.AfterLessonEnd(); err != nil {
 		return err
 	}
@@ -143,6 +163,13 @@ func (loop *EventLoop) HandleConsoleEvent(msg ConsoleMessageIn) error {
 	zap.L().Debug("HandleConsoleEvent: " + string(msg.Type))
 	if err := loop.BeforeHandleConsoleEvent(msg); err != nil { return err }
 	//TODO some key logic here
+	switch msg.Type {
+		case ConsoleSkipMessage:
+			//TODO we wanna send a next round message if the leader
+			break
+		default:
+			zap.L().Warn("Unexpected ConsoleMessageType: " + string(msg.Type))
+	}
 	if err := loop.AfterHandleConsoleEvent(msg); err != nil { return err }
 	return nil
 }
@@ -176,6 +203,11 @@ func (loop *EventLoop) AfterHandleScreenEvent(event ShowScreenEvent) error {
 	return nil
 }
 
+//TODO I think the idea was we had a preload kinda idea
+//TODO and then we had a go to round event
+
+//TODO and we have a preload(N) on the controller, which should just return "what it can", even if incomplete
+
 //TODO this probably requires returning a new round (or something similar) so we can trigger the "new" round type stuff
 //TODO - for now let's keep it simple...
 func (loop *EventLoop) HandleScreenEvent(event ShowScreenEvent) error {
@@ -199,6 +231,7 @@ func (loop *EventLoop) HandleScreenEvent(event ShowScreenEvent) error {
 }
 
 func (loop *EventLoop) HandleEvents() error {
+	//TODO we need some natural break conditions here too
 	Loop:
 		for {
 			select {

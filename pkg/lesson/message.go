@@ -5,7 +5,7 @@ import (
 )
 
 type Message struct {
-	OptPlayerToken PlayerToken     `json:"playerId,omitempty"`
+	PlayerToken PlayerToken     `json:"playerId,omitempty"`
 	Round          RoundIdx        `json:"round,omitempty"` //Helps idempotency and avoids races
 	Data           json.RawMessage `json:"data,omitempty"`
 }
@@ -13,18 +13,21 @@ type Message struct {
 type ConsoleMessageInType string
 const (
 	ConsoleSkipMessage ConsoleMessageInType = "skip"
-	RegisterMessage ConsoleMessageInType = "register"
+	ConsoleRegisterMessage ConsoleMessageInType = "register"
 )
 
 type ConsoleMessageIn struct {
 	Message
 	Type ConsoleMessageInType	`json:"type"`
+	OptOutChan *chan<- ConsoleMessageOut
 }
 
 type ConsoleMessageOutType string
 const (
-	//TODO add some real messages here
-	DummyMessage ConsoleMessageOutType = "dummy"
+	ConsoleRequestInputMessage ConsoleMessageOutType = "request_input"
+	ConsoleShowLoadingMessage ConsoleMessageOutType = "show_loading"
+	ConsoleShowIdle ConsoleMessageOutType = "show_idle"
+	ConsoleEndGameMessage ConsoleMessageOutType = "end_game"
 )
 
 type ConsoleMessageOut struct {
@@ -44,7 +47,9 @@ type TheatreMessageIn struct {
 
 type TheatreMessageOutType string
 const (
-	ScreenMessage TheatreMessageOutType = "screen" //Render a screen
+	TheatreUpdateScreenMessage TheatreMessageOutType = "update_screen" //Render a screen
+	TheatreGoToRoundMessage TheatreMessageOutType = "go_to_round"
+	TheatreEndGameMessage TheatreMessageOutType = "end_game"
 )
 
 type TheatreMessageOut struct {
