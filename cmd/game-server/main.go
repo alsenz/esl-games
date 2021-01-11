@@ -5,12 +5,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/alsenz/esl-games/pkg/lesson"
+	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"html/template"
 	"log"
 	"net/http"
-
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gorilla/websocket"
 )
 
@@ -19,18 +22,27 @@ var addr = flag.String("addr", "localhost:8080", "http service address")
 var upgrader = websocket.Upgrader{} // use default options
 
 //TODO use https://github.com/pascaldekloe/jwt
+//TODO OR use oauth2 library
+//TODO also github.com/coreos/go-oidc/v3/oidc
 //TODO use https://github.com/unrolled/secure
 
-//TODO: use for testing: docker pull docker.pkg.github.com/navikt/mock-oauth2-server/mock-oauth2-server
-//TODO this also looks good: docker run --rm -it -p 4593:4593 rafaelhdr/glewlwyd-oauth2-server:quickstart
+//TODO write a little mock http server that just returns a Set-Cookie with some grants in return for setting whatever you want
+//TODO will take 10 seconds and will nicely
 
-func echo(w http.ResponseWriter, r *http.Request) {
+func (lesson *Lesson) play(w http.ResponseWriter, r *http.Request) {
+
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		//TODO migrate to zap log
 		log.Print("upgrade:", err)
 		return
 	}
 	defer c.Close()
+
+	//TODO we wanna generate a client token on register
+	if NewConsoleAcceptMessage().write(c) != nil {
+
+	}
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
@@ -46,14 +58,54 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func watch(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func home(w http.ResponseWriter, r *http.Request) {
 	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
 }
 
 func main() {
 	//TODO let's get a bunch of flags together here... these are as important
+	var lessonCode, authDomain, authProvider, authClientID string
+	//TODO we YET need an auth provider here as an argument
+	var requireAuth bool
+	flag.StringVar(&lessonCode, "lesson-code", "", "The lesson code for access (default empty string = no lesson code required)")
+	flag.StringVar(&authDomain, "auth-domain", "", "If require-auth is set, only accept ")
+	flag.StringVar(&authProvider, "auth-provider", "", "Oidc auth provider")
+	flag.StringVar(&authClientID, "auth-client-id", "", "Oidc oauth2 client ID")
+	//TODO other params finishing off https://github.com/coreos/go-oidc/blob/v3/example/idtoken/app.go
+	flag.BoolVar(&requireAuth)
 	flag.Parse()
-	log.SetFlags(0)
+
+	provider, err := oidc.NewProvider(context.Background(), "https://accounts.google.com")
+	if err != nil {
+		zap.L().Fatal(err.Error())
+	}
+	oidcConfig := &oidc.Config{
+		ClientID: authClientID,
+	}
+	verifier := provider.Verifier(oidcConfig)
+	//TODO most of this stuff needs to get set in the handle...
+	oauth2TheatreConfig := oauth2.Config{
+		ClientID:     authClientID,
+		ClientSecret: clientSecret, //TODO add this as a flag
+		Endpoint:     provider.Endpoint(),
+		RedirectURL:  "TOOD WE NEED TO KNOW OUR OWN REDIRECT! Which might be different? May be theatre or otherwise?",
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+	oauth2ConsoleConfig := oauth2.Config{
+		ClientID:     authClientID,
+		ClientSecret: clientSecret, //TODO add this as a flag
+		Endpoint:     provider.Endpoint(),
+		RedirectURL:  "TOOD WE NEED TO KNOW OUR OWN REDIRECT! Which might be different? May be theatre or otherwise?",
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+
+	//TODO move this through to Lesson and then pick up from there.
+
+
 	//TODO plan needs to be asynchronously set
 	//
 	register := lesson.Register{
@@ -61,14 +113,18 @@ func main() {
 		Done:         false,
 		RequireLogin: false,
 		OptDomain:    nil,
-		LessonCode:   "",
+		LessonCode:   lessonCode,
 	}
+	//TODO
 	lessonSrv := lesson.NewLesson(register)
-	http.HandleFunc("/register", echo)
-	http.HandleFunc("/theatre", home)
+
+	//TODO secure wrapper round these -- TODO let's add the flags now and copy the pattern.
+	http.HandleFunc("/play", lesson.PlayHanlder)
+	http.HandleFunc("/watch", lesson.WatchHandler)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 
+//TODO delete this once we've used it.
 var homeTemplate = template.Must(template.New("").Parse(`
 <!DOCTYPE html>
 <html>

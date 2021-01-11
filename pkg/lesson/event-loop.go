@@ -2,42 +2,74 @@ package lesson
 
 import (
 	"encoding/json"
+	"errors"
 	"go.uber.org/zap"
 	"time"
 )
 
-type MoveOnEvent struct {
-	CurrentRound RoundIdx
+//TODO event loop events need to be largely very light weight - the event loop shouldn't spend long working on them at all
+
+type EventLoopEvent interface {
+	HandleFromController(* EventLoop) error
+	HandleFromConsole(* EventLoop, ClientID) error
+	HandleFromTheatre(* EventLoopEvent) error
 }
 
-type ShowScreenEvent struct {
+type RegisterEvent struct {
+	PlayerToken ClientID
+	OutChannel  chan<- EventLoopEvent
+}
+
+type JumpToSceneRequest struct {
+	TargetRound  RoundIdx
+}
+
+type PreloadScreen struct {
 	Round RoundIdx
 	View RenderedView
-	InputRequest map[PlayerToken]ConsoleMessageOut
+}
+
+type RequestForInput struct {
+	InputRequest map[ClientID]ConsoleMessage //TODO ideally this is more processed than that before it hits the controller...
+}
+
+type InputResponse struct {
+	PlayerToken ClientID
+}
+
+//TODO we need a send input on the way back up... and does this differ in any way? Probably.
+
+type EndRegistrationEvent struct {
+	// Nothing - we wait for the game to start after a few preload screens and a JumpToSceneRequest
+}
+
+type EndSceneEvent struct {
+	NextRound RoundIdx
 }
 
 //TODO lesson needs to construct, and make the channels.
 type EventLoop struct {
-	CurrentRound        RoundIdx //Current round index as we understand it
-	InactivityTimeout	time.Duration
-	LeaderPlayerToken   PlayerToken
+	CurrentRound        RoundIdx //Current round index as we understand it. A 0, 0, 0 round = registration
+	InactivityTimeout   time.Duration
+	LeaderPlayerToken   ClientID
 	RegistrationTimeout time.Duration
-	// Channels for sending and receiving messages to/from theatre websockets
-	TheatreChannelIn <-chan TheatreMessageIn
-	TheatreChannelOuts []chan<- TheatreMessageOut
+	// Channels for sending and receiving messages to/from theatre websockets.
+	// Go routines handling websockets must convert their respective events to EventLoopEvents
+	TheatreChannelIn <-chan EventLoopEvent
+	TheatreChannelOuts []chan<- EventLoopEvent
 	// Channels for sending and receiving messages to/from console websockets
-	ConsoleChannelIn <-chan ConsoleMessageIn
-	ConsoleChannelOuts map[PlayerToken]chan<- ConsoleMessageOut
-	// Channels for telling the planner that we can move to another round
-	PlannerChannelOut chan<- MoveOnEvent
+	// Go routines handling websockets must convert their respective events to EventLoopEvents
+	ConsoleChannelIn <-chan EventLoopEvent
+	ConsoleChannelOuts map[ClientID]chan<- EventLoopEvent
 	// Channels for telling the controller about state changes
-	CtrlRegisterChannelOut chan<- RegistrationEvent
-	ControllerChannelOut chan<- PlayerResponseEvent
-	ControllerChannelIn <-chan ShowScreenEvent
+	ControllerChannelOut chan<- ControllerEvent
+	EventLoopChannelIn <-chan EventLoopEvent
 }
 
 func (loop *EventLoop) BeforeLessonStart() error {
 	zap.L().Info("BeforeLessonStart")
+	// This is the default round index for registration & initiation.
+	loop.CurrentRound = RoundIdx{0,0,0}
 	return nil
 }
 
@@ -48,13 +80,20 @@ func (loop *EventLoop) BeforeRegistration() error {
 
 func (loop *EventLoop) AfterRegistration() error {
 	zap.L().Info("AfterRegistration")
+	// By convention, this indicates the game is not initialised but that registration is over
+	loop.CurrentRound = RoundIdx{0,0, 1}
 	return nil
 }
 
+//TODO we need an event to say IsInitialising() and WaitingForRegistration should be instructive.
+
+//TODO this is no longer so optional on all - this will have to be sent sepearately.
 // Console Messages sometimes come with new output channels to map players to
-func (loop *EventLoop) updatePlayerOut(playerToken PlayerToken, playerOut chan<- ConsoleMessageOut) {
+func (loop *EventLoop) updatePlayerOut(playerToken ClientID, playerOut chan<- EventLoopEvent) {
 	loop.ConsoleChannelOuts[playerToken] = playerOut
 }
+
+//TODO - serious question about how we listen during registration
 
 func (loop *EventLoop) DoRegistration() error {
 	zap.L().Info("StartRegistration")
@@ -62,6 +101,7 @@ func (loop *EventLoop) DoRegistration() error {
 		return err
 	}
 	Loop:
+		//TODO here we obviously want a listen for events...
 		for {
 		select {
 		case msg := <-loop.ConsoleChannelIn:
@@ -74,8 +114,16 @@ func (loop *EventLoop) DoRegistration() error {
 					break Loop
 				}
 			case ConsoleRegisterMessage:
-				//TODO the first step is to ensure that the output channel is right
-				//TODO the next step is to add the player to the controller
+				// This case demands
+				if msg.OptOutChan == nil {
+					return errors.New("ConsoleRegisterMessage delivered without an output channel- logic error!")
+				}
+				//TODO are we turning these into events here or doing a handle?
+				//TODO this isn't quite right - this should be more like - AddPlayerEvent
+				loop.ControllerChannelOut <- CtrlAddPlayerEvent{
+					PlayerToken: msg.PlayerToken,
+					PlayerName:  msg.TODO,
+				}
 			default:
 				zap.L().Warn("ConsoleInMessageType " + string(msg.Type) + " is not accepted at this stage.")
 			}
@@ -137,7 +185,7 @@ func (loop *EventLoop) LessonEnd() error {
 	//TODO so far so ok...
 	//TODO but how to BROADCAST to channel? Apparently this is impossible... TODO so we're going to need a list
 	for consoleChannel := range loop.ConsoleChannelOuts {
-		consoleChannel <- ConsoleMessageOut{Message{
+		consoleChannel <- ConsoleMessageOut{WebsocketMessage{
 			nil, //This is for all players
 			loop.CurrentRound,
 			json.RawMessage{}, //No extra info required
@@ -217,7 +265,7 @@ func (loop *EventLoop) HandleScreenEvent(event ShowScreenEvent) error {
 
 	/*Round RoundIdx
 	View RenderedView
-	InputRequest map[PlayerToken]ConsoleMessageOut*/
+	InputRequest map[ClientID]ConsoleMessageOut*/
 	//TODO answers will update... there may be a preloading chance... working out when we need to is gonna be hard
 	//TODO better to just send to all theatres the screen to be ready to load
 	//TODO then send the message to consoles

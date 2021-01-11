@@ -74,7 +74,7 @@ func (qr *QuestionRules) Scan(src interface{}) error {
 	return json.Unmarshal(*jsn, qr)
 }
 
-type QuestionDraw map[RoundIdx]map[PlayerToken]Question
+type QuestionDraw map[RoundIdx]map[ClientID]Question
 
 type Question struct {
 	account.UserObject

@@ -4,36 +4,32 @@ import (
 	"encoding/json"
 )
 
-type Message struct {
-	PlayerToken PlayerToken     `json:"playerId,omitempty"`
-	Round          RoundIdx        `json:"round,omitempty"` //Helps idempotency and avoids races
-	Data           json.RawMessage `json:"data,omitempty"`
+//TODO we can simplify these a bit. Call them WebsocketMessage instead.
+//TODO and we don't need the different between the In and the Out, although a console message vs theatre message a good idea.
+
+type WebsocketMessage struct {
+	PlayerToken ClientID        `json:"playerId,omitempty"`
+	Round       RoundIdx        `json:"round,omitempty"` //Helps idempotency and avoids races
+	Data        json.RawMessage `json:"data,omitempty"`
 }
 
-type ConsoleMessageInType string
+type ConsoleMessageType string
 const (
-	ConsoleSkipMessage ConsoleMessageInType = "skip"
-	ConsoleRegisterMessage ConsoleMessageInType = "register"
+	ConsoleSkipMessage ConsoleMessageType = "skip_round"
+	ConsoleRegisterMessage ConsoleMessageType = "register"
+	ConsoleRequestInputMessage ConsoleMessageType = "request_input"
+	ConsoleShowLoadingMessage ConsoleMessageType = "show_loading"
+	ConsoleShowIdle ConsoleMessageType = "show_idle"
+	ConsoleEndGameMessage ConsoleMessageType = "end_game"
 )
 
-type ConsoleMessageIn struct {
-	Message
-	Type ConsoleMessageInType	`json:"type"`
-	OptOutChan *chan<- ConsoleMessageOut
+type ConsoleMessage struct {
+	WebsocketMessage
+	Type ConsoleMessageType	`json:"type"`
 }
 
-type ConsoleMessageOutType string
-const (
-	ConsoleRequestInputMessage ConsoleMessageOutType = "request_input"
-	ConsoleShowLoadingMessage ConsoleMessageOutType = "show_loading"
-	ConsoleShowIdle ConsoleMessageOutType = "show_idle"
-	ConsoleEndGameMessage ConsoleMessageOutType = "end_game"
-)
-
-type ConsoleMessageOut struct {
-	Message
-	Type ConsoleMessageOutType	`json:"type"`
-}
+//TODO
+//OptOutChan *chan<- ConsoleMessageOut - the register event will have a callback channel
 
 type TheatreMessageInType string
 const (
@@ -41,7 +37,7 @@ const (
 )
 
 type TheatreMessageIn struct {
-	Message
+	WebsocketMessage
 	Type TheatreMessageInType `json:"type"`
 }
 
@@ -53,6 +49,6 @@ const (
 )
 
 type TheatreMessageOut struct {
-	Message
+	WebsocketMessage
 	Type TheatreMessageOutType `json:"type"`
 }

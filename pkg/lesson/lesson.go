@@ -13,7 +13,7 @@ import (
 //TODO TODO
 
 type Client struct {
-	Send chan Message
+	Send chan WebsocketMessage
 }
 
 //TODO this mostly needs to go away
@@ -36,7 +36,7 @@ type Lesson struct {
 
 func NewLesson(register Register) * Lesson {
 	return &Lesson{nil, register, make(map[RoundIdx]map[QuestionLink]Question),
-		NewLessonModel(), make(chan Message, 8), make(map[string]Client)}
+		NewLessonModel(), make(chan WebsocketMessage, 8), make(map[string]Client)}
 }
 
 func (lesson *Lesson) Run(planId uuid.UUID) error {
