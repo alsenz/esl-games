@@ -1,5 +1,10 @@
 package lesson
 
+import (
+	"errors"
+	"go.uber.org/zap"
+)
+
 //TODO how to build an API over lots of channels?
 //TODO how to have an interface based on fields? What would it be? AddPlayer, AddResponse, RequestPreload
 
@@ -24,8 +29,17 @@ type Controller struct {
 	EventLoopOut chan<- EventLoopEvent
 }
 
-func (c Controller) Run() {
-	//TODO basically run handle event a lot!
+// Note: we assume that LoadPlan has already happened
+func (c Controller) Run() error {
+	if ! c.Planner.PlanIsLoaded() {
+		return errors.New("Logic error - attempt to Run() controller before Plan is loaded on Planner")
+	}
+	for msg := range c.EventChannelIn {
+		if err := msg.Handle(&c); err != nil {
+			zap.L().Error("Controller loop handle received an error, shutting down controller")
+			return err
+		}
+	}
 
 }
 

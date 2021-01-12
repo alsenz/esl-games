@@ -18,7 +18,7 @@ type Plan struct {
 
 type Planner struct {
 	PlanID uuid.UUID
-	Plan Plan
+	Plan *Plan
 	conn *gorm.DB
 	//A channel for making some of the fetch from the db async
 	QuestionRetrievalChannel chan<- QuestionDraw
@@ -29,15 +29,19 @@ func NewPlanner(planID uuid.UUID, conn *gorm.DB) *Planner {
 	return &Planner{planID, nil, conn, make(chan map[QuestionLink]Question, 8)}
 }
 
-func (planner *Planner) Start() error {
-	return planner.LoadPlan()
-}
-
 func (planner *Planner) LoadPlan() error {
 	zap.L().Info("Loading Plan")
-	planner.Plan = Plan{}
-	result:= planner.conn.First(&planner.Plan, planner.PlanID)
-	return result.Error
+	planner.Plan = &Plan{}
+	result:= planner.conn.First(planner.Plan, planner.PlanID)
+	if result.Error != nil {
+		planner.Plan = nil // Reset required to make PlanIsLoaded work
+		return result.Error
+	}
+	return nil
+}
+
+func (planner *Planner) PlanIsLoaded() bool {
+	return planner.Plan != nil
 }
 
 //TODO change this - should be for a question filter - a resolved one at that probably

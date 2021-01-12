@@ -5,8 +5,7 @@ import (
 	"errors"
 )
 
-//TODO we can simplify these a bit. Call them WebsocketMessage instead.
-//TODO and we don't need the different between the In and the Out, although a console message vs theatre message a good idea.
+//TODO most of these need conversion
 
 type EventLoopTransformable interface {
 	MakeEventLoopEvent() EventLoopEvent
@@ -42,7 +41,7 @@ func (msg ConsoleMessage) MakeEventLoopEvent() (EventLoopEvent, error) {
 		}
 		return RegisterEvent{msg.PlayerToken, *msg.ClientOutChannel}, nil
 	default:
-		//TODO error log... for the others.
+		return nil, errors.New("Unable to make EventLoopEvent... unknown Type " + string(msg.Type))
 	}
 }
 
@@ -59,4 +58,12 @@ type TheatreMessage struct {
 	Type TheatreMessageType `json:"type"`
 }
 
-//TODO we need a MakeEventLoopEvent() for TheatreMessage.... TOOD TODO
+func (msg TheatreMessage) MakeEventLoopEvent() (EventLoopEvent, error) {
+	switch msg.Type {
+	case TheatreSkipMessage:
+		//TODO need to map all these
+		return nil, nil
+	default:
+		return nil, errors.New("Unable to make EventLoopEvent... unknown Type " + string(msg.Type))
+	}
+}

@@ -47,6 +47,7 @@ type EndSceneEvent struct {
 	NextRound RoundIdx
 }
 
+
 //TODO lesson needs to construct, and make the channels.
 type EventLoop struct {
 	CurrentRound        RoundIdx //Current round index as we understand it. A 0, 0, 0 round = registration
@@ -65,6 +66,7 @@ type EventLoop struct {
 	ControllerChannelOut chan<- ControllerEvent
 	EventLoopChannelIn <-chan EventLoopEvent
 }
+
 
 func (loop *EventLoop) BeforeLessonStart() error {
 	zap.L().Info("BeforeLessonStart")
