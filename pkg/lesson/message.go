@@ -2,10 +2,15 @@ package lesson
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 //TODO we can simplify these a bit. Call them WebsocketMessage instead.
 //TODO and we don't need the different between the In and the Out, although a console message vs theatre message a good idea.
+
+type EventLoopTransformable interface {
+	MakeEventLoopEvent() EventLoopEvent
+}
 
 type WebsocketMessage struct {
 	PlayerToken ClientID        `json:"playerId,omitempty"`
@@ -26,29 +31,32 @@ const (
 type ConsoleMessage struct {
 	WebsocketMessage
 	Type ConsoleMessageType	`json:"type"`
+	ClientOutChannel *chan<- ConsoleMessage //Optional - the output chanel associated with this console message for this client
 }
 
-//TODO
-//OptOutChan *chan<- ConsoleMessageOut - the register event will have a callback channel
+func (msg ConsoleMessage) MakeEventLoopEvent() (EventLoopEvent, error) {
+	switch msg.Type {
+	case ConsoleRegisterMessage:
+		if msg.ClientOutChannel == nil {
+			return nil, errors.New("Unable to make EventLoopEvent for ConsoleMessage of type " + string(msg.Type) + "... no out channel provided")
+		}
+		return RegisterEvent{msg.PlayerToken, *msg.ClientOutChannel}, nil
+	default:
+		//TODO error log... for the others.
+	}
+}
 
-type TheatreMessageInType string
+type TheatreMessageType string
 const (
-	TheatreSkipMessage TheatreMessageInType = "skip"
+	TheatreSkipMessage TheatreMessageType = "skip_round"
+	TheatreUpdateScreenMessage TheatreMessageType = "update_screen" //Render a screen
+	TheatreGoToRoundMessage TheatreMessageType = "go_to_round"
+	TheatreEndGameMessage TheatreMessageType = "end_game"
 )
 
-type TheatreMessageIn struct {
+type TheatreMessage struct {
 	WebsocketMessage
-	Type TheatreMessageInType `json:"type"`
+	Type TheatreMessageType `json:"type"`
 }
 
-type TheatreMessageOutType string
-const (
-	TheatreUpdateScreenMessage TheatreMessageOutType = "update_screen" //Render a screen
-	TheatreGoToRoundMessage TheatreMessageOutType = "go_to_round"
-	TheatreEndGameMessage TheatreMessageOutType = "end_game"
-)
-
-type TheatreMessageOut struct {
-	WebsocketMessage
-	Type TheatreMessageOutType `json:"type"`
-}
+//TODO we need a MakeEventLoopEvent() for TheatreMessage.... TOOD TODO
