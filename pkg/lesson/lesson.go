@@ -46,7 +46,7 @@ func NewLesson(register Register, inactivityTimeout time.Duration) * Lesson {
 			theatreChannelIn,
 			theatreChannelOuts,
 			consoleChannelIn,
-			
+
 		}, //TODO we need to make some channels here, mostly... TODO create a New for this
 		NewLessonModel(),
 		register,

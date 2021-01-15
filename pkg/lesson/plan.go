@@ -1,7 +1,6 @@
 package lesson
 
 import (
-	"errors"
 	"github.com/alsenz/esl-games/pkg/account"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
