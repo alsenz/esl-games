@@ -10,3 +10,5 @@ type TeamRules struct {
 	TeamLogic TeamLogic
 	Count uint8
 }
+
+type TeamName string

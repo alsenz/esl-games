@@ -606,8 +606,8 @@ def go_dependencies():
     go_repository(
         name = "com_github_google_uuid",
         importpath = "github.com/google/uuid",
-        sum = "h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=",
-        version = "v1.1.2",
+        sum = "h1:kxhtnfFVi+rYdOALN0B3k9UT86zVJKfBimRaciULW4I=",
+        version = "v1.1.5",
     )
     go_repository(
         name = "com_github_googleapis_gax_go_v2",
@@ -781,6 +781,13 @@ def go_dependencies():
         version = "v1.0.0",
     )
     go_repository(
+        name = "com_github_huandu_xstrings",
+        importpath = "github.com/huandu/xstrings",
+        sum = "h1:L18LIDzqlW6xN2rEkpdV8+oL/IXWJ1APd+vsdYy4Wdw=",
+        version = "v1.3.2",
+    )
+
+    go_repository(
         name = "com_github_ianlancetaylor_demangle",
         importpath = "github.com/ianlancetaylor/demangle",
         sum = "h1:UDMh68UUwekSh5iP2OMhRRZJiiBccgV7axzUG8vi56c=",
@@ -789,8 +796,8 @@ def go_dependencies():
     go_repository(
         name = "com_github_imdario_mergo",
         importpath = "github.com/imdario/mergo",
-        sum = "h1:6q5mVkdH/vYmqngx7kZQTjJ5HRsx+ImorDIEQ+beJgc=",
-        version = "v0.3.10",
+        sum = "h1:3tnifQM4i+fbajXKBHXWEH+KvNHqojZ778UH75j3bGA=",
+        version = "v0.3.11",
     )
     go_repository(
         name = "com_github_inconshreveable_mousetrap",
@@ -977,6 +984,24 @@ def go_dependencies():
         sum = "h1:aizVhC/NAAcKWb+5QsU1iNOZb4Yws5UO2I+aIprQITM=",
         version = "v0.7.0",
     )
+    go_repository(
+        name = "com_github_masterminds_goutils",
+        importpath = "github.com/Masterminds/goutils",
+        sum = "h1:zukEsf/1JZwCMgHiK3GZftabmxiCw4apj3a28RPBiVg=",
+        version = "v1.1.0",
+    )
+    go_repository(
+        name = "com_github_masterminds_semver",
+        importpath = "github.com/Masterminds/semver",
+        sum = "h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=",
+        version = "v1.5.0",
+    )
+    go_repository(
+        name = "com_github_masterminds_sprig",
+        importpath = "github.com/Masterminds/sprig",
+        sum = "h1:z4yfnGrZ7netVz+0EDJ0Wi+5VZCSYp4Z0m2dk6cEM60=",
+        version = "v2.22.0+incompatible",
+    )
 
     go_repository(
         name = "com_github_mattn_go_colorable",
@@ -1021,6 +1046,12 @@ def go_dependencies():
         sum = "h1:iGBIsUe3+HZ/AD/Vd7DErOt5sU9fa8Uj7A2s1aggv1Y=",
         version = "v1.0.0",
     )
+    go_repository(
+        name = "com_github_mitchellh_copystructure",
+        importpath = "github.com/mitchellh/copystructure",
+        sum = "h1:Laisrj+bAB6b/yJwB5Bt3ITZhGJdqmxquMKeZ+mmkFQ=",
+        version = "v1.0.0",
+    )
 
     go_repository(
         name = "com_github_mitchellh_go_homedir",
@@ -1053,6 +1084,13 @@ def go_dependencies():
         sum = "h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=",
         version = "v1.1.2",
     )
+    go_repository(
+        name = "com_github_mitchellh_reflectwalk",
+        importpath = "github.com/mitchellh/reflectwalk",
+        sum = "h1:FVzMWA5RllMAKIdUSC8mdWo3XtwoecrH79BY70sEEpE=",
+        version = "v1.0.1",
+    )
+
     go_repository(
         name = "com_github_moby_term",
         importpath = "github.com/moby/term",
