@@ -29,6 +29,13 @@ var QuestionContentTypes = [...]QuestionContentType{ContentTypeText, ContentType
 	ContentTypeVideo, ContentTypeNumber, ContentTypeEmoji, ContentTypeBoolean, ContentTypeMathjax, ContentTypeAudio,
 	ContentTypeChart}
 
+//TODO really not sure how question logic solves the "vote on a canvas response" setup
+//TODO really not sure how we draw this nicely as well...
+//TODO how do we setup the question multi choices response in the console...?
+//TODO how do we tie these together? Not easy.
+//TODO how do we tie that each response is assoc with a Player for voting?
+//TODO flibbit this is broken here as well isn't it? Urgh.
+
 type QuestionLogic string
 const (
 	SingleInput              QuestionLogic = "Single Input"

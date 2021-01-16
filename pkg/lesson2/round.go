@@ -5,3 +5,9 @@ type Round struct {
 	Scene uint64
 	Rep uint64
 }
+
+func (round *Round) LessThan(rhs Round) bool {
+	return (round.Act < rhs.Act) ||
+		(round.Act == rhs.Act && round.Scene < rhs.Scene) ||
+		(round.Act == rhs.Act && round.Scene == rhs.Scene && round.Rep < rhs.Rep)
+}
