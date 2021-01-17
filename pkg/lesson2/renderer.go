@@ -1,6 +1,7 @@
 package lesson2
 
 import(
+	"bytes"
 	"errors"
 	"golang.org/x/net/html"
 	"strings"
@@ -80,6 +81,34 @@ func rankingInfo(node *html.Node) (ScoreName, bool) {
 	return "", false
 }
 
+func nameAttr(node *html.Node) string {
+	for _, attr := range node.Attr {
+		if attr.Key == "name" {
+			return attr.Val
+		}
+	}
+	return ""
+}
+
+//TODO fix this and then re-group back onto question
+//TODO fixme & TODO - case checking?
+func roundAttrs(node *html.Node) Round {
+	round := Round{0, 0, 0}
+	for _, attr := range node.Attr {
+		if attr.Key == "act" {
+			//TODO parse string
+			round.Act = attr.Val
+		} else if attr.Key == "scene" {
+			//TODO parse string
+			round.Scene = attr.Val
+		} else if attr.Key == "rep" {
+			//TODO parse string
+			round.Rep = attr.Val
+		}
+	}
+	return round
+}
+
 //TODO loop back to model then to question TODO
 func (renderer *Renderer) renderRecursive(mdl *ClientModel, node *html.Node) error {
 	if node.Type == html.TextNode {
@@ -138,28 +167,32 @@ func (renderer *Renderer) renderRecursive(mdl *ClientModel, node *html.Node) err
 			cpyDiv := deepCopyNodeReTag(node, "div")
 			// Clears the contents of this node so we can repopulate
 			clearChildren(node)
+			nodeName := nameAttr(node)
+			var subMdl ClientModel
 			switch node.Data {
-			//Fixme: a load of other possible tags - read from attrs
 			case SelectPlayerTagName:
-				//TODO
-				renderer.renderRecursive(mdl.GetEntriesByPlayerName(TODO), cpyDiv)
+				subMdl = mdl.GetEntriesByPlayerName(nodeName)
 			case SelectTeamTagName:
-				//TODO
-				renderer.renderRecursive(mdl.GetEntriesByPlayerName(TODO), cpyDiv)
+				subMdl = mdl.GetEntriesByTeam(nodeName)
 			case SelectRoundTagName:
-				//TODO - get act round scene etc.
-				renderer.renderRecursive(mdl.GetEntriesByPlayerName(TODO), cpyDiv)
+				round := roundAttrs(node)
+				subMdl = mdl.GetEntriesByRound(round.Act, round.Scene, round.Rep)
 			}
+			renderer.renderRecursive(&subMdl, cpyDiv)
 			node.AppendChild(cpyDiv)
-		} else {
+		} else { //Element node child recurse
 			// Just loop over the children and modify in-place
 			for child := node.FirstChild; child != nil; child = child.NextSibling {
 				renderer.renderRecursive(mdl, node)
 			}
 		}
-	} else {
-		return nil
+	} else { //Other node child recurse
+		// Just loop over the children and modify in-place
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			renderer.renderRecursive(mdl, node)
+		}
 	}
+	return nil
 }
 
 func (renderer *Renderer) Render() (string, error) {
@@ -171,8 +204,11 @@ func (renderer *Renderer) Render() (string, error) {
 	if err = renderer.renderRecursive(renderer.model, doc); err != nil {
 		return "", err
 	}
-	//TODO make this back into a string... TODO TODO
-	return "", nil
+	buf := &bytes.Buffer{}
+	if err = html.Render(buf, doc); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 
