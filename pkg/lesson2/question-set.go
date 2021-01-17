@@ -10,7 +10,6 @@ import (
 
 // The key here is to leverage gorm Map WHERE as much as possible
 
-type QuestionBankID uuid.UUID
 
 type WhereCondition map[string]interface{}
 var AllowedWhereColumns = map[string]bool {
@@ -23,8 +22,15 @@ var AllowedWhereColumns = map[string]bool {
 	"id": true,
 }
 
+type QuestionSetLogic string
+const (
+	QuestionSetLogicOneQuestionForEverybody QuestionSetLogic = "one-question-for-everbody"
+	QuestionSetLogicOneQuestionPerPlayer QuestionSetLogic = "one-question-per-player"
+	QuestionSetLogicOneQuestionPerTeam QuestionSetLogic = "one-question-per-team"
+)
+
 type QuestionSet struct {
-	QuestionBanks []QuestionBankID	`json:"questionBanks,omitempty"`
+	Logic QuestionSetLogic `json:"logic"`
 	WhereCondition WhereCondition `json:"whereCondition,omitempty"`
 }
 
@@ -91,28 +97,57 @@ func (wc *WhereCondition) CleanseAndValidate() error {
 	}
 }
 
-func (wc *WhereCondition) AddAuth(user account.User) error {
-	//TODO: note - we'll need a check permissions on the questions
-	//TODO: as we'll need to make sure that the group read is set!
+func (wc *WhereCondition) AddAuth(user account.User) {
 	(*wc)["owner_id"] = user.ID
 	(*wc)["group_id"] = user.GroupIDs()
-	return nil
 }
 
-//TODO pick this up in a bit.
+//TODO move onto controller
+
+//TODO "has permission..." nice simplification
+
+//TODO move this into the controller
+func (qs *QuestionSet) filterByPermissions(teacher account.User, questions []Question) []Question {
+	//TODO pick this up next
+	result := make([]Question, 0 , len(questions))
+	for _, qs := range questions {
+		if qs.OwnerID == teacher.ID {
+
+		}
+		for tGrpID := range teacher.GroupIDs() {
+			if tGrpID == qs.GroupID {
+				//check the
+				break
+			}
+		}
+	}
+	//TODO: note - we'll need a check permissions on the questions
+	//TODO: as we'll need to make sure that the group read is set!
+	//TODO filter based on result
+}
+
+//TODO move this into the controller TODO TODO
+//TODO should this in fact perhaps sit on the controller? TODO TODO
+//TODO pick this up in a bit- would be good to make this ASYNC!
+//TODO TODO
+
+//TODO controller should know who teacher is for e.g.
 //Note - let's just get rid of the idea that question filters have templates
-func (qs QuestionSet) Resolve(teacher account.User, DB *gorm.DB) ([]Question, error) {
+func Resolve(qs *QuestionSet, teacher account.User, DB *gorm.DB) ([]Question, error) {
 	if err := qs.WhereCondition.CleanseAndValidate(); err != nil {
 		return nil, err
 	}
-	if err := qs.WhereCondition.AddAuth(teacher); err != nil {
-		return nil, err
+	qs.WhereCondition.AddAuth(teacher)
+	//TODO TODO we need to know what the limit is - and that will depend on
+	//TODO check this here - make sure it isn't part of question logic...
+	//TODO what the question mapping logic is- one-question, one-per-player, one-per-team
+	WHAT_IS_THE_LIMIT := 5 //TODO
+	questions := make([]Question, 0, WHAT_IS_THE_LIMIT)
+	result := DB.Where(qs.WhereCondition).Limit(WHAT_IS_THE_LIMIT).Find(&questions)
+	if(result.Error != nil) {
+		return nil, result.Error
 	}
-
-	//TODO check this in the previous code
-	DB.Where(qs.WhereCondition)
-
-	//TODO TODO - we need to then filter the permissions of this thing
-
-	return make([]Question, 0), nil
+	//TODO - make this happen
+	questions = qs.filterByPermissions(teacher, questions)
+	return questions, nil
 }
