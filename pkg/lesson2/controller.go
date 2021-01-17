@@ -9,6 +9,7 @@ import (
 // Controller runs on the EventLoop go routine mostly,
 // except a number of Async methods that take a channel to sync back with (with optional error!)
 type Controller struct {
+	//Note: Controller doesn't own the current round any more - event loop does that
 	PlanID uuid.UUID
 	Plan *Plan // This is the fixed recipe for the lesson
 	Model Model // This is the dynamically evaluated model as questions are answered etc.

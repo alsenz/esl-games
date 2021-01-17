@@ -4,6 +4,7 @@ import(
 	"bytes"
 	"errors"
 	"golang.org/x/net/html"
+	"strconv"
 	"strings"
 )
 
@@ -90,26 +91,27 @@ func nameAttr(node *html.Node) string {
 	return ""
 }
 
-//TODO fix this and then re-group back onto question
-//TODO fixme & TODO - case checking?
-func roundAttrs(node *html.Node) Round {
+func roundAttrs(node *html.Node) (Round, error) {
 	round := Round{0, 0, 0}
+	var err error
 	for _, attr := range node.Attr {
-		if attr.Key == "act" {
-			//TODO parse string
-			round.Act = attr.Val
-		} else if attr.Key == "scene" {
-			//TODO parse string
-			round.Scene = attr.Val
-		} else if attr.Key == "rep" {
-			//TODO parse string
-			round.Rep = attr.Val
+		if strings.ToLower(attr.Key) == "act" {
+			if round.Act, err = strconv.ParseUint(attr.Val, 10, 64); errr != nil {
+				return round, err
+			}
+		} else if strings.ToLower(attr.Key) == "scene" {
+			if round.Scene, err = strconv.ParseUint(attr.Val, 10, 64); errr != nil {
+				return round, err
+			}
+		} else if strings.ToLower(attr.Key) == "rep" {
+			if round.Rep, err = strconv.ParseUint(attr.Val, 10, 64); errr != nil {
+				return round, err
+			}
 		}
 	}
-	return round
+	return round, nil
 }
 
-//TODO loop back to model then to question TODO
 func (renderer *Renderer) renderRecursive(mdl *ClientModel, node *html.Node) error {
 	if node.Type == html.TextNode {
 		var err error
@@ -124,7 +126,7 @@ func (renderer *Renderer) renderRecursive(mdl *ClientModel, node *html.Node) err
 			// Clears the contents of this node so we can repopulate
 			clearChildren(node)
 			// Switch for each possible tag
-			switch node.Data {
+			switch strings.ToLower(node.Data) {
 			case EachPlayerTagName: // <each-player by-ranking="default"><h1>{{ .GetPlayers[0].Name }}</h1></each-player>
 				//Check to see which version of ForEachPlayer we want
 				if rankingScore, isAccumulated := rankingInfo(node);
@@ -169,13 +171,16 @@ func (renderer *Renderer) renderRecursive(mdl *ClientModel, node *html.Node) err
 			clearChildren(node)
 			nodeName := nameAttr(node)
 			var subMdl ClientModel
-			switch node.Data {
+			switch strings.ToLower(node.Data) {
 			case SelectPlayerTagName:
 				subMdl = mdl.GetEntriesByPlayerName(nodeName)
 			case SelectTeamTagName:
 				subMdl = mdl.GetEntriesByTeam(nodeName)
 			case SelectRoundTagName:
-				round := roundAttrs(node)
+				round, err := roundAttrs(node)
+				if err != nil {
+					return err
+				}
 				subMdl = mdl.GetEntriesByRound(round.Act, round.Scene, round.Rep)
 			}
 			renderer.renderRecursive(&subMdl, cpyDiv)

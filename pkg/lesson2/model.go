@@ -306,9 +306,6 @@ func (mdl *ClientModel) GetScores(scoreName string) []ScoreCard {
 	return scores
 }
 
-
-//TODO circle back to the renderer after this! - make a note to circle back to question!
-//TODO circle back to Question after this... look for the Eval!
 func (mdl *Model) Eval(currentPlayer Player, currentRound Round, templateStr string) (string, error) {
 	clientMdl := ClientModel{
 		*mdl,
