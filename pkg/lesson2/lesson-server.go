@@ -22,6 +22,10 @@ type LessonServer struct {
 		code string
 		inactivityTimeout time.Duration
 	}
+	//TODO I'm very convinced now that controller shouldn't have it's
+	//TODO own go-routine. Should just listen on event loop
+	//TODO then controller should have async channels made out that we can listen to
+	//TODO (or be passed to!) TODO TODO
 	Controller Controller
 	Register struct {
 		pass *string

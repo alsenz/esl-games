@@ -6,24 +6,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// Controller runs on the EventLoop go routine mostly,
+// except a number of Async methods that take a channel to sync back with (with optional error!)
 type Controller struct {
 	PlanID uuid.UUID
 	Plan *Plan // This is the fixed recipe for the lesson
 	Model Model // This is the dynamically evaluated model as questions are answered etc.
 
 	conn *gorm.DB
-	InChannel <-chan ControllerEvent
-	OutChannel chan<- EventLoopEvent
 }
 
 func NewController(planID uuid.UUID) *Controller {
-	//TODO deffo need some channels.
-	//TODO need to make the gorm connection
+	//TODO need to make the gorm connection some 'ow
+	//TODO and it makes sense to make this here...?
 	return &Controller{
 		planID,
 		nil,
 		Model{},
-		nil,
+		nil, //TODO make this here...
 	}
 }
 

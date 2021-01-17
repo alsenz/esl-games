@@ -20,6 +20,15 @@ type ClientModel struct {
 	CurrentRound Round
 }
 
+// Makes a client model with the same player and round but no records
+func (mdl *ClientModel) EmptyCopy() ClientModel {
+	return ClientModel{
+		make(Model),
+		mdl.CurrentPlayer,
+		mdl.CurrentRound,
+	}
+}
+
 func (mdl *Model) AddRecord(rec Record) {
 	teamMap, found := (*mdl)[rec.Round]
 	if !found {
@@ -50,25 +59,25 @@ func (mdl *Model) Records() []Record {
 }
 
 
-// Splits the model into many sub models each with just one ClientID
-func (mdl *Model) ForEachPlayer() []Model {
-	grouped := make(map[Player]Model)
+// Splits the model into many sub ClientModels each with just one ClientID
+func (mdl *ClientModel) ForEachPlayer() []ClientModel {
+	grouped := make(map[Player]ClientModel)
 	for _, rec := range mdl.Records() {
 		val, found := grouped[rec.Player]
 		if !found {
-			grouped[rec.Player] = make(Model)
+			grouped[rec.Player] = mdl.EmptyCopy()
 			val = grouped[rec.Player]
 		}
 		val.AddRecord(rec)
 	}
-	mdlSlice := make([]Model, 0, len(grouped))
+	mdlSlice := make([]ClientModel, 0, len(grouped))
 	for _, val := range grouped {
 		mdlSlice = append(mdlSlice, val)
 	}
 	return mdlSlice
 }
 
-func (mdl *Model) ForEachPlayerByRank(scoreName ScoreName) []Model {
+func (mdl *ClientModel) ForEachPlayerByRank(scoreName ScoreName) []ClientModel {
 	models := mdl.ForEachPlayer()
 	// Sorts from smallest ranking to largest
 	sort.Slice(models, func(i, j int) bool {
@@ -86,7 +95,7 @@ func (mdl *Model) ForEachPlayerByRank(scoreName ScoreName) []Model {
 	return models
 }
 
-func (mdl *Model) ForEachPlayerByAccumulatedRank(scoreName ScoreName) []Model {
+func (mdl *ClientModel) ForEachPlayerByAccumulatedRank(scoreName ScoreName) []ClientModel {
 	models := mdl.ForEachPlayer()
 	// Sorts from smallest ranking to largest
 	sort.Slice(models, func(i, j int) bool {
@@ -104,35 +113,53 @@ func (mdl *Model) ForEachPlayerByAccumulatedRank(scoreName ScoreName) []Model {
 	return models
 }
 
+//TODO we're gonna need an ability to get scores for teams
+//TODO TODO
+
 // Splits the model into many sub models each with just one Round
-func (mdl *Model) ForEachRound() []Model {
-	grouped := make(map[Round]Model)
+func (mdl *ClientModel) ForEachRound() []ClientModel {
+	grouped := make(map[Round]ClientModel)
 	for _, rec := range mdl.Records() {
 		val, found := grouped[rec.Round]
 		if !found {
-			grouped[rec.Round] = make(Model)
+			grouped[rec.Round] = mdl.EmptyCopy()
 			val = grouped[rec.Round]
 		}
 		val.AddRecord(rec)
 	}
-	mdlSlice := make([]Model, 0, len(grouped))
+	mdlSlice := make([]ClientModel, 0, len(grouped))
 	for _, val := range grouped {
 		mdlSlice = append(mdlSlice, val)
 	}
+	// We sort by round since this is likely to be expected behaviour
+	//By convention, everything in the models has a round
+	sort.Slice(mdlSlice, func(i int, j int) bool {
+		// Just look at the round of the first record
+		var iRound, jRound Round
+		for round, _ := range mdlSlice[i].Model {
+			iRound = round
+			break
+		}
+		for round, _ := range mdlSlice[j].Model {
+			jRound = round
+			break
+		}
+		return iRound.LessThan(jRound)
+	})
 	return mdlSlice
 }
 
-func (mdl *Model) ForEachTeam() []Model {
-	grouped := make(map[TeamName]Model)
+func (mdl *ClientModel) ForEachTeam() []ClientModel {
+	grouped := make(map[TeamName]ClientModel)
 	for _, rec := range mdl.Records() {
 		val, found := grouped[rec.Team]
 		if !found {
-			grouped[rec.Team] = make(Model)
+			grouped[rec.Team] = mdl.EmptyCopy()
 			val = grouped[rec.Team]
 		}
 		val.AddRecord(rec)
 	}
-	mdlSlice := make([]Model, 0, len(grouped))
+	mdlSlice := make([]ClientModel, 0, len(grouped))
 	for _, val := range grouped {
 		mdlSlice = append(mdlSlice, val)
 	}
@@ -141,8 +168,8 @@ func (mdl *Model) ForEachTeam() []Model {
 
 //TODO implement these and then revisit the circle-back
 
-func (mdl *Model) GetEntriesByPlayerName(playerName string) Model {
-	newMdl := make(Model, len(*mdl))
+func (mdl *ClientModel) GetEntriesByPlayerName(playerName string) ClientModel {
+	newMdl := mdl.EmptyCopy()
 	for _, rec := range mdl.Records() {
 		if rec.Player.Name == playerName {
 			newMdl.AddRecord(rec)
@@ -151,8 +178,8 @@ func (mdl *Model) GetEntriesByPlayerName(playerName string) Model {
 	return newMdl
 }
 
-func (mdl *Model) GetEntriesByClientID(clientID string) Model {
-	newMdl := make(Model, len(*mdl))
+func (mdl *ClientModel) GetEntriesByClientID(clientID string) ClientModel {
+	newMdl := mdl.EmptyCopy()
 	for _, rec := range mdl.Records() {
 		if string(rec.Player.ClientID) == clientID {
 			newMdl.AddRecord(rec)
@@ -161,8 +188,8 @@ func (mdl *Model) GetEntriesByClientID(clientID string) Model {
 	return newMdl
 }
 
-func (mdl *Model) GetEntriesByAct(act uint64) Model {
-	newMdl := make(Model, len(*mdl))
+func (mdl *ClientModel) GetEntriesByAct(act uint64) ClientModel {
+	newMdl := mdl.EmptyCopy()
 	for _, rec := range mdl.Records() {
 		if rec.Round.Act == act {
 			newMdl.AddRecord(rec)
@@ -171,8 +198,8 @@ func (mdl *Model) GetEntriesByAct(act uint64) Model {
 	return newMdl
 }
 
-func (mdl *Model) GetEntriesByActScene(act uint64, scene uint64) Model {
-	newMdl := make(Model, len(*mdl))
+func (mdl *ClientModel) GetEntriesByActScene(act uint64, scene uint64) ClientModel {
+	newMdl := mdl.EmptyCopy()
 	for _, rec := range mdl.Records() {
 		if rec.Round.Act == act && rec.Round.Scene == scene {
 			newMdl.AddRecord(rec)
@@ -181,8 +208,8 @@ func (mdl *Model) GetEntriesByActScene(act uint64, scene uint64) Model {
 	return newMdl
 }
 
-func (mdl *Model) GetEntriesByRound(act uint64, scene uint64, repeat uint64) Model {
-	newMdl := make(Model, len(*mdl))
+func (mdl *ClientModel) GetEntriesByRound(act uint64, scene uint64, repeat uint64) ClientModel {
+	newMdl := mdl.EmptyCopy()
 	for _, rec := range mdl.Records() {
 		if rec.Round.Act == act && rec.Round.Scene == scene && rec.Round.Rep == repeat {
 			newMdl.AddRecord(rec)
@@ -194,43 +221,23 @@ func (mdl *Model) GetEntriesByRound(act uint64, scene uint64, repeat uint64) Mod
 // If there is no previous scene in the act
 func (mdl *ClientModel) GetEntriesByPreviousScene() ClientModel {
 	if mdl.CurrentRound.Scene <= 1 { // Cannot have a previous scene in the act
-		return ClientModel{
-			mdl.GetEntriesByRound(0, 0 , 0),
-			mdl.CurrentPlayer,
-			Round{0, 0, 0},
-		}
+		mdl.GetEntriesByRound(0, 0 , 0)
 	}
-	return ClientModel{
-		mdl.GetEntriesByRound(mdl.CurrentRound.Act, mdl.CurrentRound.Scene - 1,
-			mdl.CurrentRound.Rep),
-		mdl.CurrentPlayer,
-		mdl.CurrentRound,
-	}
+	mdl.GetEntriesByRound(mdl.CurrentRound.Act, mdl.CurrentRound.Scene - 1,
+		mdl.CurrentRound.Rep)
 }
 
 //Fixme: I'm not sure semantically a Round is a Round as much as a Rep?
 func (mdl *ClientModel) GetEntriesByPreviousRep() ClientModel {
 	if mdl.CurrentRound.Rep <= 1 { //There are no previous reps...
-		return ClientModel{
-			mdl.GetEntriesByRound(0, 0 , 0),
-			mdl.CurrentPlayer,
-			Round{0, 0, 0},
-		}
+		return mdl.GetEntriesByRound(0, 0 , 0)
 	}
-	return ClientModel{
-		mdl.GetEntriesByRound(mdl.CurrentRound.Act, mdl.CurrentRound.Scene,
-			mdl.CurrentRound.Rep-1),
-		mdl.CurrentPlayer,
-		mdl.CurrentRound,
-	}
+	return mdl.GetEntriesByRound(mdl.CurrentRound.Act, mdl.CurrentRound.Scene,
+		mdl.CurrentRound.Rep-1)
 }
 
 func (mdl *ClientModel) GetEntriesByCurrentPlayer() ClientModel {
-	return ClientModel{
-		mdl.GetEntriesByClientID(string(mdl.CurrentPlayer.ClientID)),
-		mdl.CurrentPlayer,
-		mdl.CurrentRound,
-	}
+	return mdl.GetEntriesByClientID(string(mdl.CurrentPlayer.ClientID))
 }
 
 func (mdl *ClientModel) GetEntriesByLastRoundWithQuestion() ClientModel {
@@ -241,41 +248,62 @@ func (mdl *ClientModel) GetEntriesByLastRoundWithQuestion() ClientModel {
 			maxRound = rec.Round
 		}
 	}
-	return ClientModel{
-		mdl.GetEntriesByRound(maxRound.Act, maxRound.Scene, maxRound.Rep),
-		mdl.CurrentPlayer,
-		mdl.CurrentRound}
+	return mdl.GetEntriesByRound(maxRound.Act, maxRound.Scene, maxRound.Rep)
 }
 
-func (mdl *Model) GetEntriesByTeam(teamName string) Model {
-	//TODO this is next. TODO TODO
-	//TODO pick this up after coffee...
+func (mdl *ClientModel) GetEntriesByTeam(teamName string) ClientModel {
+	result := mdl.EmptyCopy()
+	for _, rec := range mdl.Records() {
+		if string(rec.Team) == teamName {
+			result.AddRecord(rec)
+		}
+	}
+	return result
 }
 
-func (mdl *Model) GetQuestions() []Question {
-	//TODO
+func (mdl *ClientModel) GetQuestions() []Question {
+	questions := make([]Question, 0, len(mdl.Model))
+	for _, rec := range mdl.Records() {
+		if rec.Question != nil {
+			questions = append(questions, *rec.Question)
+		}
+	}
+	return questions
 }
 
-func (mdl *Model) GetPlayers() []Player {
-	//TODO
+func (mdl *ClientModel) GetPlayers() []Player {
+	players := make([]Player, 0, len(mdl.Model))
+	for _, rec := range mdl.Records() {
+		if rec.Question != nil {
+			players = append(players, rec.Player)
+		}
+	}
+	return players
 }
 
-func (mdl *Model) GetScoreCards() []ScoreCards {
-	//TODO
+func (mdl *ClientModel) GetScoreCards() []ScoreCards {
+	scoreCards := make([]ScoreCards, 0, len(mdl.Model))
+	for _, rec := range mdl.Records() {
+		if rec.Question != nil {
+			scoreCards = append(scoreCards, rec.ScoreCards)
+		}
+	}
+	return scoreCards
 }
 
+//TODO TODO TODO this still needs to even be thought about, let alone implemented
 //TODO we probably need a GetResponses TODO TODO
 
-func (mdl *Model) GetScores(scoreName string) []ScoreCard {
-	//TODO
-}
-
-func (mdl *Model) GetScoreCardsByPlayerName(playerName string) []ScoreCards {
-	//TODO
-}
-
-func (mdl *Model) GetQuestionsByPlayerName(playerName string) []Question {
-	//TODO
+func (mdl *ClientModel) GetScores(scoreName string) []ScoreCard {
+	scores := make([]ScoreCard, 0, len(mdl.Model))
+	for _, rec := range mdl.Records() {
+		if rec.Question != nil {
+			if score, found := rec.ScoreCards[ScoreName(scoreName)]; found {
+				scores = append(scores, score)
+			}
+		}
+	}
+	return scores
 }
 
 
@@ -287,6 +315,10 @@ func (mdl *Model) Eval(currentPlayer Player, currentRound Round, templateStr str
 		currentPlayer,
 		currentRound,
 	}
+	return clientMdl.Eval(templateStr)
+}
+
+func (mdl *ClientModel) Eval(templateStr string) (string, error) {
 	// Just translate the expression into a parseable if expression
 	tpl, err := template.New("base").Funcs(sprig.HermeticHtmlFuncMap()).Parse(
 		templateStr)
@@ -294,7 +326,7 @@ func (mdl *Model) Eval(currentPlayer Player, currentRound Round, templateStr str
 		return "", err
 	}
 	buf := &bytes.Buffer{}
-	if err = tpl.Execute(buf, clientMdl); err != nil {
+	if err = tpl.Execute(buf, mdl); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

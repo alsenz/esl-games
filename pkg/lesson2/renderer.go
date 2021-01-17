@@ -22,15 +22,20 @@ var loopingTags = map[string]bool{
 var filteringTags = map[string]bool {
 	SelectPlayerTagName: true,
 	SelectRoundTagName: true,
-	SelectTeamTagName: true
+	SelectTeamTagName: true,
 }
 
+const (
+	ByAccumulatedRankingAttribute string = "by-accumulated-ranking"
+	ByRankingAttribute string = "by-ranking"
+)
+
 type Renderer struct {
-	model *Model
+	model *ClientModel
 	slideTemplate string
 }
 
-func NewRenderer(mdl *Model, slideTemplate string) *Renderer {
+func NewRenderer(mdl *ClientModel, slideTemplate string) *Renderer {
 	return &Renderer{mdl, slideTemplate}
 }
 
@@ -60,11 +65,28 @@ func clearChildren(n *html.Node) {
 	}
 }
 
-func (renderer *Renderer) renderRecursive(mdl *Model, node *html.Node) error {
+// Returns the score to rank by and whether it's accumulated ranking
+func rankingInfo(node *html.Node) (ScoreName, bool) {
+	if node.Data != EachPlayerTagName {
+		return "", false
+	}
+	for _, attr := range node.Attr {
+		if attr.Key == ByRankingAttribute {
+			return ScoreName(attr.Val), false
+		} else if attr.Key == ByAccumulatedRankingAttribute {
+			return ScoreName(attr.Val), true
+		}
+	}
+	return "", false
+}
+
+//TODO loop back to model then to question TODO
+func (renderer *Renderer) renderRecursive(mdl *ClientModel, node *html.Node) error {
 	if node.Type == html.TextNode {
-		//TODO from here...
-		//TODO pick this up - and check the return type
-		node.Data = mdl.Eval(node.Data) //TODO let Eval sit on the model
+		var err error
+		if node.Data, err = mdl.Eval(node.Data); err != nil {
+			return err
+		}
 		return nil
 	} else if node.Type == html.ElementNode {
 		if _, containsLooping := loopingTags[node.Data]; containsLooping {
@@ -72,28 +94,68 @@ func (renderer *Renderer) renderRecursive(mdl *Model, node *html.Node) error {
 			protoDiv := deepCopyNodeReTag(node, "div")
 			// Clears the contents of this node so we can repopulate
 			clearChildren(node)
-			//TODO step 3: for each group (of the right kind)
-			//TODO TODO we now need to implement the switch and filter
+			// Switch for each possible tag
 			switch node.Data {
-			case EachPlayerTagName:
-				//TODO ... step 3 (contd) copy myself
-				//TODO - implement on model
-			case EachTeamTagName:
-				//TODO ... step 3 (contd) copy myself
-				//TODO - implement on model
+			case EachPlayerTagName: // <each-player by-ranking="default"><h1>{{ .GetPlayers[0].Name }}</h1></each-player>
+				//Check to see which version of ForEachPlayer we want
+				if rankingScore, isAccumulated := rankingInfo(node);
+					len(rankingScore) > 0 && isAccumulated {
+					for _, subMdl := range mdl.ForEachPlayerByRank(rankingScore) {
+						cpyDiv := deepCopyNode(protoDiv)
+						renderer.renderRecursive(&subMdl, cpyDiv)
+						node.AppendChild(cpyDiv)
+					}
+				} else if len(rankingScore) > 0 && !isAccumulated {
+					for _, subMdl := range mdl.ForEachPlayerByAccumulatedRank(rankingScore) {
+						cpyDiv := deepCopyNode(protoDiv)
+						renderer.renderRecursive(&subMdl, cpyDiv)
+						node.AppendChild(cpyDiv)
+					}
+				} else { //Bog standard player looping
+					for _, subMdl := range mdl.ForEachPlayer() {
+						cpyDiv := deepCopyNode(protoDiv)
+						renderer.renderRecursive(&subMdl, cpyDiv)
+						node.AppendChild(cpyDiv)
+					}
+				}
+			case EachTeamTagName: //Fixme: may need team rankings on these
+				for _, subMdl := range mdl.ForEachTeam() {
+					cpyDiv := deepCopyNode(protoDiv)
+					renderer.renderRecursive(&subMdl, cpyDiv)
+					node.AppendChild(cpyDiv)
+				}
 			case EachRoundTagName:
-				//TODO ... step 3 (contd) copy myself
-				//TODO - implement on model
+				for _, subMdl := range mdl.ForEachRound() {
+					cpyDiv := deepCopyNode(protoDiv)
+					renderer.renderRecursive(&subMdl, cpyDiv)
+					node.AppendChild(cpyDiv)
+				}
 			default:
 				return errors.New("Logic error: unimplemented looping tag: " + node.Data)
 			}
-			//TODO ... step 3 (contd) copy myself
-			//TODO ... step 4 (contd) apply render recursive with model group
-			//TODO ... step 5 (contd) add myself back to the parent
 		} else if _, containsFiltering := loopingTags[node.Data]; containsFiltering {
-
+			// Creates a copy of this node as a div
+			cpyDiv := deepCopyNodeReTag(node, "div")
+			// Clears the contents of this node so we can repopulate
+			clearChildren(node)
+			switch node.Data {
+			//Fixme: a load of other possible tags - read from attrs
+			case SelectPlayerTagName:
+				//TODO
+				renderer.renderRecursive(mdl.GetEntriesByPlayerName(TODO), cpyDiv)
+			case SelectTeamTagName:
+				//TODO
+				renderer.renderRecursive(mdl.GetEntriesByPlayerName(TODO), cpyDiv)
+			case SelectRoundTagName:
+				//TODO - get act round scene etc.
+				renderer.renderRecursive(mdl.GetEntriesByPlayerName(TODO), cpyDiv)
+			}
+			node.AppendChild(cpyDiv)
 		} else {
-			//TODO
+			// Just loop over the children and modify in-place
+			for child := node.FirstChild; child != nil; child = child.NextSibling {
+				renderer.renderRecursive(mdl, node)
+			}
 		}
 	} else {
 		return nil
