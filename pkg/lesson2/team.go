@@ -2,13 +2,14 @@ package lesson2
 
 type TeamLogic string
 const (
+	TeamLogicNoTeams	TeamLogic = "No Teams"
 	TeamLogicBySize		TeamLogic = "By Size"
 	TeamLogicByNumberOf	TeamLogic = "By Number Of"
 )
 
 type TeamRules struct {
 	TeamLogic TeamLogic
-	Count uint8
+	Count int
 }
 
 type TeamName string
