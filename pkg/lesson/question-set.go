@@ -46,6 +46,7 @@ func (rqf ResolvedQuestionFilter) ToWhereClause(tx *gorm.DB) (*gorm.DB, error) {
 
 	} else { // Use the filter
 		//TODO
+		//
 	}
 }
 

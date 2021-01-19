@@ -13,3 +13,4 @@ type TeamRules struct {
 }
 
 type TeamName string
+const DefaultTeamName TeamName = "default"

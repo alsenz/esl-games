@@ -1,8 +1,10 @@
 package account
 
 import (
+	"fmt"
 	"github.com/alsenz/esl-games/pkg/model"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -74,4 +76,17 @@ func (user *User) CanWriteObject(userObject *UserObject) bool {
 		}
 	}
 	return false
+}
+
+func (user *User) InjectReadAuth(DB *gorm.DB) *gorm.DB {
+	args := make(map[string]interface{})
+	args["owner_id"] = user.ID
+	args["group_ids"] = user.GroupIDs()
+	args["acl_flags"] = []ACLFlag{ACLRead, ACLReadWrite}
+	ownerIDCond := "owner_id = @owner_id"
+	ownerIDPerm := "acl_owner IN @acl_flags"
+	groupIDCond := "group_id IN @group_ids"
+	groupIDPerm := "acl_group IN @acl_flags"
+	return DB.Where(fmt.Sprintf("((%s) AND (%s)) OR ((%s) AND (%s))",
+		ownerIDCond, ownerIDPerm, groupIDCond, groupIDPerm), args)
 }

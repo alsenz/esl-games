@@ -2,10 +2,8 @@ package lesson2
 
 import (
 	"errors"
-	"github.com/alsenz/esl-games/pkg/account"
 	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
-	"gorm.io/gorm"
 )
 
 // The key here is to leverage gorm Map WHERE as much as possible
@@ -92,12 +90,7 @@ func (wc *WhereCondition) CleanseAndValidate() error {
 				errors.New("cannot validate WhereCondition, type of \""+key+"\" is" +
 					" not string or []string")
 			}
-
 		}
 	}
-}
-
-func (wc *WhereCondition) AddAuth(user account.User) {
-	(*wc)["owner_id"] = user.ID
-	(*wc)["group_id"] = user.GroupIDs()
+	return nil
 }

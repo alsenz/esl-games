@@ -1,9 +1,9 @@
 package lesson2
 
 type Round struct {
-	Act uint64
-	Scene uint64
-	Rep uint64
+	Act uint
+	Scene uint
+	Rep uint
 }
 
 func (round *Round) LessThan(rhs Round) bool {
