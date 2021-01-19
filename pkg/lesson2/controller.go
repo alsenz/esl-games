@@ -145,7 +145,7 @@ func(ctrl *Controller) GetPlayerTeam(player Player) TeamName {
 
 //TODO need to pass through a draw channel
 // Returns whether or not a round was created - i.e. false if the round already exists
-func (ctrl *Controller) CreateRound(round Round, fetchQuestions bool) (bool, error) { //TODO draw channel
+func (ctrl *Controller) CreateRound(round Round, drawChan *chan<-Draw) (bool, error) { //TODO draw channel
 	if _, found := ctrl.Model[round]; found {
 		return false, nil
 	}
@@ -160,8 +160,8 @@ func (ctrl *Controller) CreateRound(round Round, fetchQuestions bool) (bool, err
 			nil,
 		})
 	}
-	if fetchQuestions {
-		if err := ctrl.FetchQuestions(round); err != nil {
+	if drawChan != nil {
+		if err := ctrl.FetchQuestions(round, *drawChan); err != nil {
 			return false, err
 		}
 	}
@@ -174,6 +174,8 @@ func (ctrl *Controller) CreateRound(round Round, fetchQuestions bool) (bool, err
 //TODO we need a simple score round! //TODO -- this will need to score forward and update those scores in future rounds...
 
 //TODO we need a simple (pre)load scene!
+//TODO we need a ResolveRound that will use the Draw map or questions pre-assigned in the model to resovle the screens
+//TODO TODO
 
 func (ctrl *Controller) trimRepeatQuestions(qs *QuestionSet, questions []Question) []Question {
 	// Proceed to identify new questions by counter example
@@ -207,9 +209,15 @@ func (ctrl *Controller) trimRepeatQuestions(qs *QuestionSet, questions []Questio
 	return result
 }
 
-
-//TODO we need a ResolveRound that will use the Draw map or questions pre-assigned in the model to resovle the screens
-//TODO TODO
+func (ctrl *Controller) UsedQuestionCount() int {
+	ct := 0
+	for _, inner := range ctrl.Draw {
+		for _, inner := range inner {
+			ct += len(inner)
+		}
+	}
+	return ct
+}
 
 
 func (ctrl *Controller) NumberRequired(qs *QuestionSet) int {
@@ -224,60 +232,95 @@ func (ctrl *Controller) NumberRequired(qs *QuestionSet) int {
 	return 0
 }
 
-//TODO resolve needs to put things into a Draw channel
-//TODO we then need to pick up hanlde draw
 //Note - let's just get rid of the idea that question filters have templates
 //Turn a question set into a list of questions and resolve those questions using
-//a client model //Fixme: make aspects of this async!
-func (ctrl *Controller) FetchQuestions(round Round) error { //TODO this to become the bulk of fetch questions
+//a client model
+func (ctrl *Controller) FetchQuestions(round Round, drawChan chan<-Draw) error {
 	//First check if we can find a question set in the plan
-	register_round := 1
-	if uint(len(ctrl.Plan.Acts) + register_round) < round.Act {
+	registerRound := 1
+	if uint(len(ctrl.Plan.Acts) + registerRound) < round.Act {
 		return errors.New(fmt.Sprintf("Act number %s not found in plan", round.Act))
 	}
 	act := ctrl.Plan.Acts[round.Act]
-	if uint(len(act.Scenes) + register_round) < round.Scene {
+	if uint(len(act.Scenes) + registerRound) < round.Scene {
 		return errors.New(fmt.Sprintf("Act number %s, Scene number %s not found in plan", round.Act, round.Scene))
 	}
 	scene := act.Scenes[round.Scene]
 	if scene.QuestionSet == nil {
 		return nil
 	}
-
-	//TODO let's go from here
-
-
-	// TODO should build query and dispatch from a go-routine.... TODO TODO should take draw chnel in
-	if err := qs.WhereCondition.CleanseAndValidate(); err != nil {
-		return nil, err
+	if err := scene.QuestionSet.WhereCondition.CleanseAndValidate(); err != nil {
+		return err
 	}
-	numberToFetch := ctrl.NumberRequired(qs) + len(ctrl.usedQuestions)
-	questions := make([]Question, 0, numberToFetch)
-	query := ctrl.conn.Where(qs.WhereCondition)
-	query = ctrl.Leader.InjectReadAuth(query)
-	result := query.Limit(numberToFetch).Find(&questions)
-	if(result.Error != nil) {
-		return nil, result.Error
+	numberToFetch := ctrl.NumberRequired(scene.QuestionSet) + ctrl.UsedQuestionCount()
+
+	go func() {
+		//TODO check this
+		//TODO this needs to be in a go routine TODO TODO
+		query := ctrl.conn.Where(scene.QuestionSet.WhereCondition)
+		query = ctrl.Leader.InjectReadAuth(query)
+		questions := make([]Question, 0, numberToFetch)
+		result := query.Limit(numberToFetch).Find(&questions)
+		if(result.Error != nil) {
+			zap.L().Fatal("Error retrieving questions: " + result.Error.Error())
+		}
+		//TODO put into the channel
+	}()
+	return  nil
+}
+
+func (ctrl *Controller) addToDraw(qs *QuestionSet, round Round, questions []Question) {
+	if _, found := ctrl.Draw[qs]; !found {
+		ctrl.Draw[qs] = make(map[Round][]Question)
 	}
-
-	//TODO everything below this happens in handle draw!
-
-
-
+	if _, found := ctrl.Draw[qs][round]; !found {
+		ctrl.Draw[qs][round] = make([]Question, len(questions))
+	}
+	ctrl.Draw[qs][round] = append(ctrl.Draw[qs][round], questions...)
 }
 
 //TODO we need a DealDraw(Draw) which should extend draw map and try to pre-resolve as much as possible
-func (ctrl *Controller) DealDraw(draw Draw) {
+func (ctrl *Controller) DealDraw(draw Draw) error {
 
 	for qs, inner := range draw {
 		for round, questions := range inner {
-			//TODO build this next!
+			if len(questions) == 0 {
+				return errors.New("no questions drawn from question set")
+			}
 			questionsFiltered := ctrl.trimRepeatQuestions(qs, questions)
-			//Now we need to assign these to teams... TODO TODO
+			// We know we're going to use these, so we can add them to the draw
+			ctrl.addToDraw(qs, round, questionsFiltered)
+			// Assign to teams / players and resolve
+			switch qs.Logic {
+			case QuestionSetLogicOneQuestionForEverybody:
+				if teamMap, found := ctrl.Model[round]; found {
+					for team, playerMap := range teamMap {
+						for playerId, record := range playerMap {
+							playerQ := questions[0]
+							playerQ.Resolve(&ClientModel{
+								ctrl.Model,
+								record.Player,
+								round,
+							})
+							record.Question = &playerQ
+							ctrl.Model[round][team][playerId] = record
+						}
+					}
+				} else {
+					return errors.New("round not found in model")
+				}
+
+			case QuestionSetLogicOneQuestionPerTeam:
+				//TODO - do similar to above
+			case QuestionSetLogicOneQuestionPerPlayer:
+				//TODO
+			default:
+				zap.L().Fatal("Logic error - unknown question set logic: " + string(qs.Logic))
+			}
+			//TODO
 			//TODO next step -
-			//TODO filter out the cached questions
-			//TODO assign the questions to teams.
-			//TODO finally - resolve the questions using client models
+			//TODO assign the questions to teams-- not clear how this is going to happen, but we'll make it work
+			//TODO finally - resolve the questions using client models and add them to the model
 		}
 	}
 
